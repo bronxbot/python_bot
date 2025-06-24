@@ -35,7 +35,7 @@ class ServerSettings(commands.Cog, ErrorHandler):
                 "🎵 `music` - Music bot settings\n"
                 "👋 `welcome` - Welcome system setup\n"
                 "📝 `logging` - Event logging configuration\n\n"
-                "**Example:** `general view` or `welcome setup`"
+                "**Example:** `general view` or `welcome embed`"
             ),
             color=0xe74c3c
         )
@@ -68,7 +68,7 @@ class ServerSettings(commands.Cog, ErrorHandler):
         welcome_channel = f"<#{welcome['channel_id']}>" if welcome.get("channel_id") else "Not set"
         embed.add_field(
             name="Welcome System",
-            value=f"Status: {welcome_status}\nChannel: {welcome_channel}\n*Use: `welcome setup` to configure*",
+            value=f"Status: {welcome_status}\nChannel: {welcome_channel}\n*Use: `welcome embed` or `welcome test` to configure*",
             inline=False
         )
         
@@ -126,29 +126,39 @@ class ServerSettings(commands.Cog, ErrorHandler):
             welcome = settings.get("welcome", {})
             
             embed = nextcord.Embed(
-                title="Welcome Settings",
-                description=f"Status: {'✅' if welcome.get('enabled') else '❌'}",
+                title="👋 Welcome Settings",
+                description=f"Status: {'✅ Enabled' if welcome.get('enabled') else '❌ Disabled'}",
                 color=nextcord.Color.blue()
             )
             
             embed.add_field(
-                name="Channel",
+                name="📺 Channel",
                 value=f"<#{welcome['channel_id']}>" if welcome.get("channel_id") else "Not set",
                 inline=False
             )
             
             if welcome.get("embed_json"):
                 embed.add_field(
-                    name="Welcome Embed",
+                    name="💬 Welcome Embed",
                     value="Custom embed configured",
                     inline=False
                 )
             else:
                 embed.add_field(
-                    name="Message",
+                    name="💬 Message",
                     value=f"```{welcome.get('message', 'Not set')}```",
                     inline=False
                 )
+            
+            embed.add_field(
+                name="📋 Available Commands",
+                value=(
+                    "`welcome embed` - Configure welcome embed with JSON\n"
+                    "`welcome test` - Test welcome message/embed\n\n"
+                    "💡 **Tip:** For advanced welcome features, use the new `welcome` command from the WelcomeSettings cog!"
+                ),
+                inline=False
+            )
             
             await ctx.send(embed=embed)
 

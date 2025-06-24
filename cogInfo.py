@@ -3,18 +3,21 @@ from bronxbot import *
 COG_DATA = {
     "cogs": {
         "cogs.admin.Admin": "warning",
-        "cogs.admin.Performance": "warning",  # Add performance monitoring
+        "cogs.admin.Performance": "warning",  # Add performance monitoring        
         "cogs.misc.Cypher": "cog", 
         "cogs.misc.MathRace": "cog", 
         "cogs.misc.TicTacToe": "cog",
+        "cogs.misc.Starboard": "success",
         "cogs.Stats": "other", 
         "cogs.bronx.AI": "other",
         "cogs.bronx.VoteBans": "other", 
-        "cogs.bronx.Welcoming": "other",        "cogs.unique.Multiplayer": "fun", 
+        "cogs.bronx.Welcoming": "other",        
+        "cogs.unique.Multiplayer": "fun", 
         "cogs.fun.Fun": "fun",
         "cogs.fun.Text": "fun",
         "cogs.fun.GambleOff": "fun",
-        "cogs.unique.SyncRoles": "success",        "cogs.help": "success", 
+        "cogs.unique.SyncRoles": "success",        
+        "cogs.help": "success", 
         "cogs.admin.SlashCommands": "warning",
         "cogs.ModMail": "success", 
         "cogs.Reminders": "success",
@@ -27,12 +30,14 @@ COG_DATA = {
         "cogs.economy.Trading": "success",
         "cogs.economy.Gambling": "success",
         "cogs.economy.Work": "success",
-        "cogs.economy.Bazaar": "success",        "cogs.settings.general": "disabled",  # Temporarily disabled due to command conflict
+        "cogs.economy.Bazaar": "success",        
+        #"cogs.settings.general": "disabled",  # Temporarily disabled due to command conflict
         "cogs.settings.moderation": "success", 
         "cogs.settings.economy": "success",
-        "cogs.settings.music": "success",
-        "cogs.settings.welcome": "disabled",  # Temporarily disabled due to command conflict
-        "cogs.settings.logging": "disabled",  # Temporarily disabled due to command conflict
+        "cogs.settings.music": "success",        
+        #"cogs.ServerSettings": "disabled",  # Legacy settings cog - disabled in favor of modern settings cogs
+        "cogs.settings.welcome": "success",  # Modern welcome system
+        #"cogs.settings.logging": "disabled",  # Temporarily disabled due to command conflict
         "cogs.Error": "success",
         "cogs.music": "fun",
         #"cogs.Security": "success", disabled for now
@@ -77,14 +82,26 @@ class CogLoader:
         
         cog_groups = {}
         for cog, cog_type in COG_DATA["cogs"].items():
+            # Skip disabled cogs entirely - don't even add them to groups
+            if cog_type == "disabled":
+                continue
             if cog_type not in cog_groups:
                 cog_groups[cog_type] = []
             cog_groups[cog_type].append(cog)
+
+        # Show disabled cogs for information
+        disabled_cogs = [cog for cog, cog_type in COG_DATA["cogs"].items() if cog_type == "disabled"]
+        if disabled_cogs:
+            print(f"{cls.get_color_escape('disabled')}[DISABLED COGS]\033[0m")
+            for cog in disabled_cogs:
+                print(f"[bronxbot] {cls.get_color_escape('disabled')}{cog:<24}\033[0m : {cls.get_color_escape('disabled')}SKIPPED\033[0m (disabled)")
+            print()
 
         for cog_type in sorted(cog_groups.keys()):
             cog_results = []
             
             for cog in cog_groups[cog_type]:
+                # Load non-disabled cogs
                 success, error, load_time = await cls.load_extension_safe(bot, cog)
                 
                 status = "LOADED" if success else "ERROR"
@@ -92,19 +109,21 @@ class CogLoader:
                 cog_color = cls.get_color_escape(cog_type)
                 
                 line = f"[bronxbot] {cog_color}{cog:<24}\033[0m : {color}{status}\033[0m ({load_time:.2f}s)"
-                cog_results.append(line)
                 
                 if not success:
                     errors.append((cog, error))
+                
+                cog_results.append(line)
             
             print('\n'.join(cog_results))
             print()
 
         # summary
-        success_count = len(COG_DATA["cogs"]) - len(errors)
-        total = len(COG_DATA["cogs"])
+        disabled_count = len(disabled_cogs)
+        success_count = len(COG_DATA["cogs"]) - len(errors) - disabled_count
+        total = len(COG_DATA["cogs"]) - disabled_count
         
-        print(f"{cls.get_color_escape('success' if not errors else 'warning')}[SUMMARY] Loaded {success_count}/{total} cogs ({len(errors)} errors)\033[0m")
+        print(f"{cls.get_color_escape('success' if not errors else 'warning')}[SUMMARY] Loaded {success_count}/{total} cogs ({len(errors)} errors, {disabled_count} disabled)\033[0m")
         
         # detailed error report if needed
         if errors:

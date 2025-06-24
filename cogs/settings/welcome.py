@@ -7,6 +7,7 @@ from typing import Optional, List, Dict, Union
 import json
 import re
 import asyncio
+import random
 from datetime import datetime, timedelta
 from utils.db import AsyncDatabase
 db = AsyncDatabase.get_instance()
