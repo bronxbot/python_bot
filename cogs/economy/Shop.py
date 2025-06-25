@@ -31,8 +31,8 @@ def load_shop_data():
 SHOP_DATA = load_shop_data()
 
 class BuyModal(Modal):
-    def __init__(self, item: Dict, max_amount: int, currency: str, *args, **kwargs):
-        super().__init__(title="Purchase Confirmation", *args, **kwargs)
+    def __init__(self, item: Dict, max_amount: int, currency: str, title: str = "Purchase Confirmation", *args, **kwargs):
+        super().__init__(title=title, *args, **kwargs)
         self.item = item
         self.max_amount = max_amount
         self.currency = currency
@@ -40,7 +40,7 @@ class BuyModal(Modal):
         self.amount = TextInput(
             label=f"Amount (Max: {max_amount})",
             placeholder="Enter amount to purchase...",
-            default="1",
+            default_value="1",
             min_length=1,
             max_length=len(str(max_amount)),
         )
@@ -78,7 +78,7 @@ class ShopItemButton(Button):
         self.label = item['name']
         self.emoji = "🛒" if item['type'] == 'potion' else "💰"
         
-    async def callback(self, interaction: nextcord.Interaction):
+    async def callback(self, button: Button, interaction: nextcord.Interaction):
         max_amount = self.user_balance // self.item['price'] if self.item['price'] > 0 else 1
         if max_amount <= 0:
             await interaction.response.send_message("You can't afford this item!", ephemeral=True)

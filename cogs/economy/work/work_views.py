@@ -19,7 +19,7 @@ class JobManagementView(nextcord.ui.View):
         self.user_id = user_id
 
     @nextcord.ui.button(label="Choose Job", style=nextcord.ButtonStyle.primary, emoji="💼")
-    async def choose_job(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def choose_job(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your job menu!", ephemeral=True)
             return
@@ -44,7 +44,7 @@ class JobManagementView(nextcord.ui.View):
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     @nextcord.ui.button(label="Job Status", style=nextcord.ButtonStyle.secondary, emoji="📊")
-    async def job_status(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def job_status(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your job menu!", ephemeral=True)
             return
@@ -86,7 +86,7 @@ class JobManagementView(nextcord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @nextcord.ui.button(label="Boss Relations", style=nextcord.ButtonStyle.success, emoji="🤝")
-    async def boss_relations(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def boss_relations(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your job menu!", ephemeral=True)
             return
@@ -174,7 +174,7 @@ class BossRelationsView(nextcord.ui.View):
         self.user_job = user_job
 
     @nextcord.ui.button(label="View Gifts", style=nextcord.ButtonStyle.primary, emoji="🎁")
-    async def view_gifts(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def view_gifts(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your boss menu!", ephemeral=True)
             return
@@ -195,7 +195,7 @@ class BossRelationsView(nextcord.ui.View):
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     @nextcord.ui.button(label="Current Status", style=nextcord.ButtonStyle.secondary, emoji="📊")
-    async def current_status(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def current_status(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your boss menu!", ephemeral=True)
             return
@@ -300,7 +300,7 @@ class CoworkersView(nextcord.ui.View):
         self.job_id = job_id
 
     @nextcord.ui.button(label="Refresh List", style=nextcord.ButtonStyle.secondary, emoji="🔄")
-    async def refresh_coworkers(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
+    async def refresh_coworkers(self, button: nextcord.ui.Button, interaction: nextcord.Interaction):
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("This isn't your coworkers list!", ephemeral=True)
             return
