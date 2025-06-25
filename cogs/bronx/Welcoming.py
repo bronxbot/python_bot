@@ -45,11 +45,11 @@ class Welcoming(commands.Cog):
 
         # Load welcome channel from environment or use default
         import os
-        welcome_channel = int(os.getenv('WELCOME_CHANNEL', '1378156495144751147'))
+        welcome_channel = int(os.getenv('WELCOME_CHANNEL', '1385521743724019853'))
 
         logger.info(f"[+] Member joined: {member} in guild {member.guild.id}")
 
-        greetings = ["hi", "yo", "hola", "bonjour", "hhhjhhhiiiiii", "haiiiiii :3", "haaaaaaaiiiiiii", "hello", "hhiihihihiihihi"]
+        greetings = ["hi", "yo", "hola", "bonjour", "hhhjhhhiiiiii", "haiiiiii :3", "haaaaaaaiiiiiii", "hello", "hhiihihihiihihi", 'welcome to the bronx']
         emoji = random.choice(member.guild.emojis) if member.guild.emojis else ""
         if member.guild.id == 1259717095382319215:
             channel = member.guild.get_channel(welcome_channel)
