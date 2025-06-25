@@ -2,13 +2,15 @@ import discord
 import random
 import logging
 from discord.ext import commands
-from datetime import timedelta, datetime
 import asyncio
 import re
 import datetime
+from datetime import timedelta
 from cogs.logging.logger import CogLogger
 from utils.db import db
 from utils.error_handler import ErrorHandler
+import os
+import json
 
 def parse_duration(duration: str) -> timedelta | None:
     """Parse duration strings like '1h30m' into timedelta."""
@@ -18,6 +20,32 @@ def parse_duration(duration: str) -> timedelta | None:
         return None
     time_params = {name: int(val) for name, val in match.groupdict(default='0').items()}
     return timedelta(**time_params)
+
+def save_warn_fallback(guild, user, moderator, reason, timestamp):
+    """Fallback: Save warning to a JSON file if DB fails."""
+    data_dir = os.path.join(os.getcwd(), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    warn_file = os.path.join(data_dir, f"warns_{guild.id}.json")
+    try:
+        if os.path.exists(warn_file):
+            with open(warn_file, "r", encoding="utf-8") as f:
+                warns = json.load(f)
+        else:
+            warns = {}
+    except Exception:
+        warns = {}
+
+    warns.setdefault(str(user.id), []).append({
+        "moderator": str(moderator.id),
+        "moderator_name": str(moderator),
+        "reason": reason,
+        "timestamp": timestamp.isoformat(),
+        "guild_name": guild.name,
+        "user_name": str(user)
+    })
+
+    with open(warn_file, "w", encoding="utf-8") as f:
+        json.dump(warns, f, indent=2)
 
 class Moderation(commands.Cog, ErrorHandler):
     def __init__(self, bot):
@@ -29,7 +57,7 @@ class Moderation(commands.Cog, ErrorHandler):
 
     async def log_action(self, guild_id: int, embed: discord.Embed):
         """Log moderation action to configured channel"""
-        settings = await db.get_guild_settings(guild_id)
+        settings = db.get_guild_settings(str(guild_id))
         if log_channel_id := settings.get("moderation", {}).get("log_channel"):
             if channel := self.bot.get_channel(log_channel_id):
                 try:
@@ -69,7 +97,7 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Timed out {member.mention} for `{duration}`\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.orange(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
@@ -77,7 +105,7 @@ class Moderation(commands.Cog, ErrorHandler):
         except discord.HTTPException as e:
             await ctx.send(f"Failed to timeout: {e}")
 
-    @commands.command()
+    @commands.command(aliases=["uto"])
     @commands.has_permissions(moderate_members=True)
     async def untimeout(self, ctx, member: discord.Member, *, reason=None):
         """Remove timeout from a member
@@ -88,7 +116,7 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Removed timeout for {member.mention}\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.green(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
@@ -96,7 +124,7 @@ class Moderation(commands.Cog, ErrorHandler):
         except discord.HTTPException as e:
             await ctx.send(f"Failed to remove timeout: {e}")
 
-    @commands.command()
+    @commands.command(aliases=["k"])
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason=None):
         """Kick a member from the server
@@ -110,7 +138,7 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Kicked {member.mention}\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.red(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
@@ -118,7 +146,7 @@ class Moderation(commands.Cog, ErrorHandler):
         except discord.HTTPException as e:
             await ctx.send(f"Failed to kick: {e}")
 
-    @commands.command()
+    @commands.command(aliases=["b"])
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, member: discord.Member, *, reason=None):
         """Ban a member from the server
@@ -132,7 +160,7 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Banned {member.mention}\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.dark_red(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
@@ -140,7 +168,7 @@ class Moderation(commands.Cog, ErrorHandler):
         except discord.HTTPException as e:
             await ctx.send(f"Failed to ban: {e}")
 
-    @commands.command()
+    @commands.command(aliases=["ub"])
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, user: discord.User, *, reason=None):
         """Unban a user by ID or mention
@@ -151,14 +179,14 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Unbanned {user.mention}\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.green(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
         except discord.HTTPException as e:
             await ctx.send(f"Failed to unban: {e}")
 
-    @commands.command()
+    @commands.command(aliases=["p"])
     @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx, amount: int = 10):
         """Delete a number of messages (default 10, max 100)
@@ -170,12 +198,12 @@ class Moderation(commands.Cog, ErrorHandler):
         embed = discord.Embed(
             description=f"Purged {len(deleted)-1} messages.",
             color=discord.Color.blurple(),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         ).set_footer(text=f"by {ctx.author}")
         await ctx.send(embed=embed, delete_after=5)
         await self.log_action(ctx.guild.id, embed)
 
-    @commands.command()
+    @commands.command(aliases=["m"])
     @commands.has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member, *, reason=None):
         """Mute a member (adds Muted role)
@@ -193,13 +221,13 @@ class Moderation(commands.Cog, ErrorHandler):
         embed = discord.Embed(
             description=f"Muted {member.mention}\nReason: {reason or 'No reason provided'}",
             color=discord.Color.dark_grey(),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         ).set_footer(text=f"by {ctx.author}")
         await ctx.send(embed=embed)
         await self.log_action(ctx.guild.id, embed)
         await self.notify_user(member, f"You have been muted in **{ctx.guild.name}**.\nReason: {reason or 'No reason provided'}")
 
-    @commands.command()
+    @commands.command(aliases=["um"])
     @commands.has_permissions(manage_roles=True)
     async def unmute(self, ctx, member: discord.Member, *, reason=None):
         """Unmute a member (removes Muted role)
@@ -211,7 +239,7 @@ class Moderation(commands.Cog, ErrorHandler):
             embed = discord.Embed(
                 description=f"Unmuted {member.mention}\nReason: {reason or 'No reason provided'}",
                 color=discord.Color.green(),
-                timestamp=datetime.utcnow()
+                timestamp=datetime.datetime.utcnow()
             ).set_footer(text=f"by {ctx.author}")
             await ctx.send(embed=embed)
             await self.log_action(ctx.guild.id, embed)
@@ -219,7 +247,7 @@ class Moderation(commands.Cog, ErrorHandler):
         else:
             await ctx.send("User is not muted.")
 
-    @commands.command()
+    @commands.command(aliases=["sm"])
     @commands.has_permissions(manage_messages=True)
     async def slowmode(self, ctx, seconds: int = 0):
         """Set slowmode for the current channel (0 to disable)
@@ -231,12 +259,12 @@ class Moderation(commands.Cog, ErrorHandler):
         embed = discord.Embed(
             description=f"Set slowmode to {seconds} seconds.",
             color=discord.Color.blurple(),
-            timestamp=datetime.utcnow()
+            timestamp=datetime.datetime.utcnow()
         ).set_footer(text=f"by {ctx.author}")
         await ctx.send(embed=embed)
         await self.log_action(ctx.guild.id, embed)
 
-    @commands.command()
+    @commands.command(aliases=["w"])
     @commands.has_permissions(moderate_members=True)
     async def warn(self, ctx, member: discord.Member, *, reason=None):
         """Warn a member (logs warning)
@@ -245,12 +273,34 @@ class Moderation(commands.Cog, ErrorHandler):
         can, msg = self.can_act(ctx, member)
         if not can:
             return await ctx.send(msg)
-        # You can expand this to store warnings in your DB
+        timestamp = datetime.datetime.utcnow()
+        db_failed = False
+        try:
+            add_warn_func = getattr(db, "add_warn", None)
+            if callable(add_warn_func):
+                result = add_warn_func(ctx.guild.id, member.id, ctx.author.id, reason or "No reason provided", timestamp)
+                if asyncio.iscoroutine(result):
+                    await result
+            else:
+                db_failed = True
+        except Exception as e:
+            db_failed = True
+            self.logger.error(f"DB warn failed: {e}")
+
+        if db_failed:
+            save_warn_fallback(ctx.guild, member, ctx.author, reason or "No reason provided", timestamp)
+
         embed = discord.Embed(
-            description=f"Warned {member.mention}\nReason: {reason or 'No reason provided'}",
+            title="⚠️ Member Warned",
+            description=f"{member.mention} has been warned in **{ctx.guild.name}**.",
             color=discord.Color.gold(),
-            timestamp=datetime.utcnow()
-        ).set_footer(text=f"by {ctx.author}")
+            timestamp=timestamp
+        )
+        embed.add_field(name="User", value=f"{member} (`{member.id}`)", inline=True)
+        embed.add_field(name="Moderator", value=f"{ctx.author} (`{ctx.author.id}`)", inline=True)
+        embed.add_field(name="Reason", value=reason or "No reason provided", inline=False)
+        embed.set_footer(text=f"Guild: {ctx.guild.name}", icon_url=getattr(ctx.guild.icon, 'url', None))
+
         await ctx.send(embed=embed)
         await self.log_action(ctx.guild.id, embed)
         await self.notify_user(member, f"You have been warned in **{ctx.guild.name}**.\nReason: {reason or 'No reason provided'}")
@@ -270,43 +320,85 @@ class Moderation(commands.Cog, ErrorHandler):
 
     @timeout.error
     async def timeout_error(self, ctx, error):
-        await self.generic_error(ctx, error, "timeout")
+        if isinstance(error, commands.MissingRequiredArgument):
+            if error.param.name == "member":
+                await ctx.reply(
+                    "❌ You must mention a user to timeout!\n"
+                    "Example: `.timeout @user 1h30m [reason]`"
+                )
+            elif error.param.name == "duration":
+                await ctx.reply(
+                    "❌ You must provide a duration for the timeout!\n"
+                    "Example: `.timeout @user 1h30m [reason]`\n"
+                    "Duration examples: `10m`, `2h`, `1d`, `1h30m`"
+                )
+            else:
+                await self.generic_error(ctx, error, "timeout")
+        else:
+            await self.generic_error(ctx, error, "timeout")
 
     @untimeout.error
     async def untimeout_error(self, ctx, error):
-        await self.generic_error(ctx, error, "untimeout")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to untimeout!\nExample: `.untimeout @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "untimeout")
 
     @kick.error
     async def kick_error(self, ctx, error):
-        await self.generic_error(ctx, error, "kick")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to kick!\nExample: `.kick @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "kick")
 
     @ban.error
     async def ban_error(self, ctx, error):
-        await self.generic_error(ctx, error, "ban")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to ban!\nExample: `.ban @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "ban")
 
     @unban.error
     async def unban_error(self, ctx, error):
-        await self.generic_error(ctx, error, "unban")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "user":
+            await ctx.reply("❌ You must provide a user ID or mention to unban!\nExample: `.unban user_id [reason]`")
+        else:
+            await self.generic_error(ctx, error, "unban")
 
     @purge.error
     async def purge_error(self, ctx, error):
-        await self.generic_error(ctx, error, "purge")
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("❌ Please provide a valid number of messages to purge!\nExample: `.purge 25`")
+        else:
+            await self.generic_error(ctx, error, "purge")
 
     @mute.error
     async def mute_error(self, ctx, error):
-        await self.generic_error(ctx, error, "mute")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to mute!\nExample: `.mute @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "mute")
 
     @unmute.error
     async def unmute_error(self, ctx, error):
-        await self.generic_error(ctx, error, "unmute")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to unmute!\nExample: `.unmute @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "unmute")
 
     @slowmode.error
     async def slowmode_error(self, ctx, error):
-        await self.generic_error(ctx, error, "slowmode")
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("❌ Please provide a valid number of seconds!\nExample: `.slowmode 10`")
+        else:
+            await self.generic_error(ctx, error, "slowmode")
 
     @warn.error
     async def warn_error(self, ctx, error):
-        await self.generic_error(ctx, error, "warn")
+        if isinstance(error, commands.MissingRequiredArgument) and error.param.name == "member":
+            await ctx.reply("❌ You must mention a user to warn!\nExample: `.warn @user [reason]`")
+        else:
+            await self.generic_error(ctx, error, "warn")
 
 async def setup(bot):
     logger = CogLogger("Moderation")

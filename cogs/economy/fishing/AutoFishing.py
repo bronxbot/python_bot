@@ -15,7 +15,12 @@ class AutoFishing(commands.Cog):
         self.CATCH_CHANCE = 0.5
         self.autofishing_task = self.bot.loop.create_task(self.autofishing_loop())
 
+<<<<<<< HEAD
+    async def cog_unload(self):
+        """Cancel the autofishing task when cog is unloaded"""
+=======
     def cog_unload(self):
+>>>>>>> 8347f2e296550847d482727eb8e2f0210b51ae8b
         if hasattr(self, 'autofishing_task'):
             self.autofishing_task.cancel()
 

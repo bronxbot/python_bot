@@ -5,6 +5,7 @@ import os
 import json
 from datetime import datetime
 import pytz
+from typing import Optional
 
 TIMEZONE_FILE = "user_timezones.json"
 
@@ -73,9 +74,8 @@ class Other(commands.Cog):
     @removetimezone.error
     async def removetimezone_error(self, ctx, error):
         await ctx.reply(f"❌ Error: {error}")
-
     @commands.command(aliases=["tz"])
-    async def timezone(self, ctx, user: discord.Member = None):
+    async def timezone(self, ctx, user: Optional[discord.Member] = None):
         """Show a user's current time (or your own)"""
         try:
             user = user or ctx.author
@@ -92,7 +92,8 @@ class Other(commands.Cog):
             )
             await ctx.reply(embed=embed)
         except Exception:
-            await ctx.reply(f"Timezone for {user.display_name} is invalid. Please set it again with `.settimezone <zone>`.")
+            name = user.display_name if user is not None else "This user"
+            await ctx.reply(f"Timezone for {name} is invalid. Please set it again with `.settimezone <zone>`.")
 
     @timezone.error
     async def timezone_error(self, ctx, error):
