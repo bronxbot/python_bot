@@ -486,33 +486,413 @@ class Utility(commands.Cog, ErrorHandler):
 
     @commands.command(aliases=['steal', 'stl', 'addemoji'])
     @commands.has_permissions(manage_emojis=True)
-    async def emojisteal(self, ctx, emoji: nextcord.PartialEmoji):
-        """add an emoji to this server"""
-        self.logger.info(f"Emoji steal attempted: {emoji.name}")
+    async def emojisteal(self, ctx, *emojis: nextcord.PartialEmoji):
+        """Add one or more emojis to this server"""
+        if not emojis:
+            embed = nextcord.Embed(
+                title="❌ No Emojis Provided",
+                description="Please provide at least one emoji to steal.\n\n**Usage:** `.steal <emoji1> [emoji2] [emoji3]...`",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        self.logger.info(f"Emoji steal attempted: {len(emojis)} emoji(s) by {ctx.author}")
         
         # Check if bot has aiohttp session
-        if not hasattr(self.bot, 'session'):
-            return await ctx.reply("```emoji stealing unavailable```")
-            
-        try:
-            async with self.bot.session.get(emoji.url) as resp:
-                if resp.status != 200:
-                    self.logger.error(f"Failed to download emoji: {emoji.url}")
-                    return await ctx.reply("```failed to download emoji```")
-                data = await resp.read()
-            
-            added = await ctx.guild.create_custom_emoji(
-                name=emoji.name,
-                image=data
+        if not hasattr(self.bot, 'session') or not self.bot.session:
+            embed = nextcord.Embed(
+                title="❌ Service Unavailable",
+                description="Emoji stealing service is currently unavailable - session not initialized",
+                color=0xff0000
             )
-            self.logger.info(f"Emoji added: {added}")
-            await ctx.reply(f"```added emoji: {added}```")
-        except Exception as e:
-            self.logger.error(f"Emoji add failed: {str(e)}", exc_info=True)
-            await ctx.reply("```missing permissions or slot full```")
+            return await ctx.reply(embed=embed)
+        
+        # Get current emoji counts and limits
+        static_limit, animated_limit = self.get_emoji_limit(ctx.guild)
+        static_count, animated_count = self.count_emojis_by_type(ctx.guild)
+        
+        # Create initial status embed
+        embed = nextcord.Embed(
+            title=f"🔄 Stealing {len(emojis)} Emoji(s)",
+            description=f"Processing {len(emojis)} emoji(s) for {ctx.guild.name}...",
+            color=0xffff00
+        )
+        
+        # Add current usage info
+        boost_info = f" (Boost Level {ctx.guild.premium_tier})" if ctx.guild.premium_tier > 0 else ""
+        embed.add_field(
+            name="📊 Current Usage",
+            value=f"**Static:** {static_count}/{static_limit}\n**Animated:** {animated_count}/{animated_limit}{boost_info}",
+            inline=True
+        )
+        
+        status_msg = await ctx.reply(embed=embed)
+        
+        # Track results
+        successful = []
+        failed = []
+        skipped = []
+        
+        for i, emoji in enumerate(emojis):
+            # Update progress
+            if i > 0:  # Don't update on first iteration
+                embed.description = f"Processing emoji {i+1}/{len(emojis)}: `{emoji.name}`..."
+                await status_msg.edit(embed=embed)
+            
+            try:
+                # Check if emoji with same name already exists
+                existing_emoji = nextcord.utils.get(ctx.guild.emojis, name=emoji.name)
+                if existing_emoji:
+                    skipped.append(f"`{emoji.name}` - already exists: {existing_emoji}")
+                    continue
+                
+                # Check if we have space for this emoji type
+                is_animated = emoji.animated
+                current_static, current_animated = self.count_emojis_by_type(ctx.guild)
+                
+                if is_animated and current_animated >= animated_limit:
+                    failed.append(f"`{emoji.name}` - animated slots full ({current_animated}/{animated_limit})")
+                    continue
+                elif not is_animated and current_static >= static_limit:
+                    failed.append(f"`{emoji.name}` - static slots full ({current_static}/{static_limit})")
+                    continue
+                
+                # Download the emoji
+                async with self.bot.session.get(emoji.url) as resp:
+                    if resp.status != 200:
+                        failed.append(f"`{emoji.name}` - download failed (HTTP {resp.status})")
+                        continue
+                    
+                    data = await resp.read()
+                    
+                    # Check file size
+                    if len(data) > 256 * 1024:
+                        failed.append(f"`{emoji.name}` - file too large (>256KB)")
+                        continue
+                
+                # Create the emoji
+                added = await ctx.guild.create_custom_emoji(
+                    name=emoji.name,
+                    image=data,
+                    reason=f"Emoji stolen by {ctx.author}"
+                )
+                
+                successful.append(f"{added} `{emoji.name}`")
+                self.logger.info(f"Successfully added emoji: {added}")
+                
+            except nextcord.HTTPException as e:
+                error_msg = str(e)
+                if "50138" in error_msg:
+                    failed.append(f"`{emoji.name}` - emoji limit reached")
+                elif "50035" in error_msg:
+                    failed.append(f"`{emoji.name}` - invalid format")
+                elif "50013" in error_msg:
+                    failed.append(f"`{emoji.name}` - missing permissions")
+                else:
+                    failed.append(f"`{emoji.name}` - Discord error")
+                self.logger.error(f"HTTPException stealing {emoji.name}: {e}")
+                
+            except Exception as e:
+                failed.append(f"`{emoji.name}` - unexpected error")
+                self.logger.error(f"Error stealing {emoji.name}: {e}")
+        
+        # Create final results embed
+        if successful:
+            embed.color = 0x00ff00
+            embed.title = f"✅ Emoji Stealing Complete"
+        elif failed and not successful:
+            embed.color = 0xff0000
+            embed.title = f"❌ Emoji Stealing Failed"
+        else:
+            embed.color = 0xffaa00
+            embed.title = f"⚠️ Emoji Stealing Partial"
+        
+        embed.description = f"Processed {len(emojis)} emoji(s)"
+        
+        if successful:
+            embed.add_field(
+                name=f"✅ Successfully Added ({len(successful)})",
+                value="\n".join(successful[:10]) + (f"\n... and {len(successful) - 10} more" if len(successful) > 10 else ""),
+                inline=False
+            )
+        
+        if skipped:
+            embed.add_field(
+                name=f"⏭️ Skipped ({len(skipped)})",
+                value="\n".join(skipped[:5]) + (f"\n... and {len(skipped) - 5} more" if len(skipped) > 5 else ""),
+                inline=False
+            )
+        
+        if failed:
+            embed.add_field(
+                name=f"❌ Failed ({len(failed)})",
+                value="\n".join(failed[:5]) + (f"\n... and {len(failed) - 5} more" if len(failed) > 5 else ""),
+                inline=False
+            )
+        
+        # Update final usage stats
+        final_static, final_animated = self.count_emojis_by_type(ctx.guild)
+        embed.set_field_at(
+            0,  # Update the usage field
+            name="📊 Updated Usage",
+            value=f"**Static:** {final_static}/{static_limit} (+{final_static - static_count})\n**Animated:** {final_animated}/{animated_limit} (+{final_animated - animated_count}){boost_info}",
+            inline=True
+        )
+        
+        await status_msg.edit(embed=embed)
 
-    @commands.command(aliases=['firstmsg'])
-    async def firstmessage(self, ctx, channel: nextcord.TextChannel = None):
+    @commands.command(aliases=['stealurl', 'emojiurl'])
+    @commands.has_permissions(manage_emojis=True)
+    async def emojistealurl(self, ctx, url: str, name: str = None):
+        """Add an emoji from a URL"""
+        self.logger.info(f"Emoji steal from URL attempted by {ctx.author}: {url}")
+        
+        # Check if bot has aiohttp session
+        if not hasattr(self.bot, 'session') or not self.bot.session:
+            embed = nextcord.Embed(
+                title="❌ Service Unavailable",
+                description="Emoji stealing service is currently unavailable - session not initialized",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        # Validate URL
+        if not url.startswith(('http://', 'https://')):
+            embed = nextcord.Embed(
+                title="❌ Invalid URL",
+                description="URL must start with `http://` or `https://`\n\n**Usage:** `.stealurl <url> [name]`",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        # Extract name from URL if not provided
+        if not name:
+            name = url.split('/')[-1].split('.')[0]
+            # Clean the name to make it valid for Discord
+            name = ''.join(c for c in name if c.isalnum() or c == '_')[:32]
+            if not name:
+                name = "stolen_emoji"
+        
+        # Validate emoji name
+        if not name.replace('_', '').isalnum():
+            embed = nextcord.Embed(
+                title="❌ Invalid Name",
+                description="Emoji name can only contain letters, numbers, and underscores",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        if len(name) < 2 or len(name) > 32:
+            embed = nextcord.Embed(
+                title="❌ Invalid Name Length",
+                description="Emoji name must be between 2 and 32 characters",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        # Get current emoji counts and limits
+        static_limit, animated_limit = self.get_emoji_limit(ctx.guild)
+        static_count, animated_count = self.count_emojis_by_type(ctx.guild)
+        
+        # Check if emoji with same name already exists
+        existing_emoji = nextcord.utils.get(ctx.guild.emojis, name=name)
+        if existing_emoji:
+            embed = nextcord.Embed(
+                title="❌ Name Already Exists",
+                description=f"Emoji with name `{name}` already exists: {existing_emoji}",
+                color=0xff0000
+            )
+            return await ctx.reply(embed=embed)
+        
+        # Create loading embed
+        embed = nextcord.Embed(
+            title="🔄 Adding Emoji from URL",
+            description=f"Downloading and processing `{name}` from URL...",
+            color=0xffff00
+        )
+        embed.add_field(name="📝 Name", value=f"`{name}`", inline=True)
+        embed.add_field(name="🔗 URL", value=f"[Link]({url})", inline=True)
+        
+        boost_info = f" (Boost Level {ctx.guild.premium_tier})" if ctx.guild.premium_tier > 0 else ""
+        embed.add_field(
+            name="📊 Current Usage",
+            value=f"**Static:** {static_count}/{static_limit}\n**Animated:** {animated_count}/{animated_limit}{boost_info}",
+            inline=False
+        )
+        
+        status_msg = await ctx.reply(embed=embed)
+        
+        try:
+            # Download the image
+            async with self.bot.session.get(url) as resp:
+                if resp.status != 200:
+                    embed.color = 0xff0000
+                    embed.title = "❌ Download Failed"
+                    embed.description = f"Failed to download image (HTTP {resp.status})"
+                    await status_msg.edit(embed=embed)
+                    return
+                
+                # Check content type and determine if animated
+                content_type = resp.headers.get('content-type', '').lower()
+                if not any(img_type in content_type for img_type in ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']):
+                    embed.color = 0xff0000
+                    embed.title = "❌ Invalid File Type"
+                    embed.description = "URL does not point to a valid image file"
+                    await status_msg.edit(embed=embed)
+                    return
+                
+                # Determine if it's an animated emoji (GIF)
+                is_animated = 'gif' in content_type or url.lower().endswith('.gif')
+                
+                # Check appropriate emoji slots
+                if is_animated:
+                    if animated_count >= animated_limit:
+                        embed.color = 0xff0000
+                        embed.title = "❌ Animated Slots Full"
+                        embed.description = f"Server animated emoji slots full ({animated_count}/{animated_limit}){boost_info}"
+                        await status_msg.edit(embed=embed)
+                        return
+                else:
+                    if static_count >= static_limit:
+                        embed.color = 0xff0000
+                        embed.title = "❌ Static Slots Full"
+                        embed.description = f"Server static emoji slots full ({static_count}/{static_limit}){boost_info}"
+                        await status_msg.edit(embed=embed)
+                        return
+                
+                data = await resp.read()
+                
+                # Check file size (Discord limit is 256kb)
+                if len(data) > 256 * 1024:
+                    embed.color = 0xff0000
+                    embed.title = "❌ File Too Large"
+                    embed.description = "Image file too large (max 256KB)"
+                    await status_msg.edit(embed=embed)
+                    return
+            
+            # Create the emoji
+            added = await ctx.guild.create_custom_emoji(
+                name=name,
+                image=data,
+                reason=f"Emoji added from URL by {ctx.author}"
+            )
+            
+            # Success embed
+            embed.color = 0x00ff00
+            embed.title = "✅ Emoji Added Successfully"
+            embed.description = f"Successfully added emoji: {added}"
+            
+            # Update usage stats
+            final_static, final_animated = self.count_emojis_by_type(ctx.guild)
+            embed.set_field_at(
+                2,  # Update the usage field
+                name="📊 Updated Usage",
+                value=f"**Static:** {final_static}/{static_limit} (+{final_static - static_count})\n**Animated:** {final_animated}/{animated_limit} (+{final_animated - animated_count}){boost_info}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="ℹ️ Emoji Info",
+                value=f"**Type:** {'Animated' if is_animated else 'Static'}\n**Size:** {len(data)/1024:.1f} KB",
+                inline=True
+            )
+            
+            await status_msg.edit(embed=embed)
+            self.logger.info(f"Emoji successfully added from URL: {added} by {ctx.author}")
+            
+        except nextcord.HTTPException as e:
+            embed.color = 0xff0000
+            error_msg = str(e)
+            if "50138" in error_msg:
+                embed.title = "❌ Emoji Limit Reached"
+                embed.description = "Server emoji limit reached"
+            elif "50035" in error_msg:
+                embed.title = "❌ Invalid Format"
+                embed.description = "Invalid image format"
+            elif "50013" in error_msg:
+                embed.title = "❌ Missing Permissions"
+                embed.description = "Bot missing manage emojis permission"
+            else:
+                embed.title = "❌ Discord Error"
+                embed.description = f"Discord API error: {error_msg}"
+            
+            await status_msg.edit(embed=embed)
+            self.logger.error(f"HTTPException in emoji steal from URL: {e}")
+            
+        except Exception as e:
+            embed.color = 0xff0000
+            embed.title = "❌ Unexpected Error"
+            embed.description = "An unexpected error occurred while adding the emoji"
+            await status_msg.edit(embed=embed)
+            self.logger.error(f"Emoji steal from URL failed: {str(e)}", exc_info=True)
+
+    @commands.command(aliases=['emojilimit', 'emojistats'])
+    async def emojiinfo(self, ctx):
+        """Show emoji usage and limit information for this server"""
+        guild = ctx.guild
+        
+        # Get current emoji counts
+        static_count, animated_count = self.count_emojis_by_type(guild)
+        total_emojis = len(guild.emojis)
+        
+        # Get limits based on boost level
+        static_limit, animated_limit = self.get_emoji_limit(guild)
+        
+        # Create embed
+        embed = nextcord.Embed(
+            title=f"📊 Emoji Information for {guild.name}",
+            color=0x5865F2
+        )
+        
+        # Server boost info
+        boost_info = f"Level {guild.premium_tier}" if guild.premium_tier > 0 else "None"
+        embed.add_field(
+            name="🚀 Server Boost",
+            value=boost_info,
+            inline=True
+        )
+        
+        # Static emoji info
+        static_percentage = (static_count / static_limit * 100) if static_limit > 0 else 0
+        embed.add_field(
+            name="🖼️ Static Emojis",
+            value=f"{static_count}/{static_limit} ({static_percentage:.1f}%)",
+            inline=True
+        )
+        
+        # Animated emoji info  
+        animated_percentage = (animated_count / animated_limit * 100) if animated_limit > 0 else 0
+        embed.add_field(
+            name="✨ Animated Emojis", 
+            value=f"{animated_count}/{animated_limit} ({animated_percentage:.1f}%)",
+            inline=True
+        )
+        
+        # Total info
+        total_limit = static_limit + animated_limit
+        total_percentage = (total_emojis / total_limit * 100) if total_limit > 0 else 0
+        embed.add_field(
+            name="📈 Total Usage",
+            value=f"{total_emojis}/{total_limit} ({total_percentage:.1f}%)",
+            inline=False
+        )
+        
+        # Add boost level benefits
+        next_tier_limit = {0: 100, 1: 150, 2: 250, 3: 250}.get(guild.premium_tier, 250)
+        if guild.premium_tier < 3:
+            embed.add_field(
+                name="📈 Next Boost Level Benefits",
+                value=f"Boost to Level {guild.premium_tier + 1} for {next_tier_limit} emoji slots each!",
+                inline=False
+            )
+        
+        embed.set_footer(text=f"� Tip: Use .steal <emoji> or .stealurl <url> [name] to add emojis")
+        
+        await ctx.reply(embed=embed)
+        self.logger.info(f"Emoji info shown for {guild.name} to {ctx.author}")
+
+    @commands.command()
+    async def firstmsg(self, ctx, channel: nextcord.TextChannel = None):
         """Fetch a channel's first message."""
         channel = channel or ctx.channel
         self.logger.debug(f"First message requested in #{channel.name}")
@@ -1252,6 +1632,36 @@ class Utility(commands.Cog, ErrorHandler):
         
         await ctx.reply(embed=embed)
         self.logger.info(f"Command list shown to {ctx.author}")
+
+    def get_emoji_limit(self, guild):
+        """Get emoji limits based on server boost level - returns (static_limit, animated_limit)"""
+        # Discord emoji limits based on boost level:
+        # Level 0: 50 static + 50 animated
+        # Level 1: 100 static + 100 animated  
+        # Level 2: 150 static + 150 animated
+        # Level 3: 250 static + 250 animated
+        boost_limits = {
+            0: 50,
+            1: 100,
+            2: 150,
+            3: 250
+        }
+        
+        limit = boost_limits.get(guild.premium_tier, 50)
+        return limit, limit  # Static limit, Animated limit
+
+    def count_emojis_by_type(self, guild):
+        """Count static and animated emojis separately"""
+        static_count = 0
+        animated_count = 0
+        
+        for emoji in guild.emojis:
+            if emoji.animated:
+                animated_count += 1
+            else:
+                static_count += 1
+                
+        return static_count, animated_count
 
 async def setup(bot):
     logger = CogLogger("Utility")

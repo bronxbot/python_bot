@@ -16,13 +16,16 @@ async def on_ready():
         logging.error(f"Error during cog loading: {e}")
         traceback.print_exc()
     
-    # Start the stats update loop after cogs are loaded
-    if not hasattr(bot, 'update_stats'):
-        logging.error("update_stats task not found")
-        return
-    if not bot.update_stats.is_running():
-        bot.update_stats.start()
-        logging.info("Started stats update loop")
+    # Start the guild update loop after cogs are loaded
+    if hasattr(bot, "update_guilds") and not bot.update_guilds.is_running():
+        bot.update_guilds.start()
+        logging.info("Started guild update loop")
+    
+    # Start additional stats update loop
+    from bronxbot import additional_stats_update
+    if not additional_stats_update.is_running():
+        additional_stats_update.start()
+        logging.info("Started additional stats update loop")
 
     # Start command usage tracker auto-save
     try:
@@ -30,6 +33,17 @@ async def on_ready():
         logging.info("Started command usage tracker auto-save")
     except Exception as e:
         logging.error(f"Failed to start command usage tracker: {e}")
+
+    # Initialize aiohttp session for emoji stealing
+    try:
+        import aiohttp
+        if not hasattr(bot, 'session') or bot.session is None:
+            bot.session = aiohttp.ClientSession()
+            logging.info("Aiohttp session initialized for emoji stealing")
+        else:
+            logging.info("Aiohttp session already exists")
+    except Exception as e:
+        logging.error(f"Failed to initialize aiohttp session: {e}")
 
     # Initialize scalability manager
     try:

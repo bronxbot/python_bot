@@ -417,7 +417,7 @@ class Economy(commands.Cog):
             self.logger.error(f"Interest upgrade error for {ctx.author.id}: {e}")
             await safe_reply(ctx, "An error occurred while upgrading interest rate.")
 
-    @commands.command(aliases=['bankup', 'bup'])
+    @commands.command(aliases=['bankup', 'bup', 'bu'])
     @log_command
     async def upgrade_bank(self, ctx):
         """Upgrade your bank capacity"""

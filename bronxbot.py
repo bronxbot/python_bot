@@ -38,6 +38,7 @@ class BronxBot(commands.AutoShardedBot):
         self.MAIN_GUILD_IDS = MAIN_GUILD_IDS
         self.guild_list = []
         self.stats_tracker = None  # Will be initialized later
+        self.session = None  # Will be initialized when bot is ready
 
     async def load_cog_with_timing(self, cog_name: str) -> Tuple[bool, float]:
         """Load a cog and measure its loading time"""
@@ -51,6 +52,12 @@ class BronxBot(commands.AutoShardedBot):
             load_time = time.time() - start_time
             self.cog_load_times[cog_name] = load_time
             return False, load_time
+
+    async def setup_hook(self):
+        """Called when the bot is ready - set up aiohttp session"""
+        import aiohttp
+        self.session = aiohttp.ClientSession()
+        logging.info("Aiohttp session initialized for emoji stealing")
 
     @tasks.loop(minutes=5)  # Check every 5 minutes, no need to do it as frequently as stats
     async def update_guilds(self):
@@ -102,10 +109,6 @@ class BronxBot(commands.AutoShardedBot):
         logging.info("Shutting down bot...")
         
         # Stop background tasks
-        if hasattr(self, 'update_stats') and self.update_stats.is_running():
-            self.update_stats.stop()
-            logging.info("Stopped stats update loop")
-        
         if hasattr(self, 'update_guilds') and self.update_guilds.is_running():
             self.update_guilds.stop()
             logging.info("Stopped guild update loop")
@@ -130,6 +133,11 @@ class BronxBot(commands.AutoShardedBot):
             await self.scalability_manager.shutdown()
             logging.info("Scalability manager shutdown complete")
         
+        # Close aiohttp session
+        if hasattr(self, 'session') and self.session:
+            await self.session.close()
+            logging.info("Closed aiohttp session")
+        
         # Close database connections (only if db module exists)
         try:
             from utils.db import db
@@ -142,6 +150,10 @@ class BronxBot(commands.AutoShardedBot):
             logging.error(f"Error closing database: {e}")
         
         # Close aiohttp sessions and other resources
+        if hasattr(self, 'session') and self.session:
+            await self.session.close()
+            logging.info("Closed aiohttp session")
+        
         await super().close()
         logging.info("Bot shutdown complete")
 

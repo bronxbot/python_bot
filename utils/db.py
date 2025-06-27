@@ -524,6 +524,48 @@ class AsyncDatabase:
         )
         return result.modified_count > 0 or result.upserted_id is not None
 
+    async def get_bank_level(self, user_id: int, guild_id: int = None) -> int:
+        """Get user's bank level based on their current bank limit"""
+        if not await self.ensure_connected():
+            return 0
+        
+        current_limit = await self.get_bank_limit(user_id, guild_id)
+        
+        # Map bank limit to level based on BANK_UPGRADE_LEVELS
+        # Import here to avoid circular imports
+        from cogs.economy.economy.constants import BANK_UPGRADE_LEVELS
+        
+        # Default level 0 has limit 5000 (implied)
+        if current_limit <= 5000:
+            return 0
+            
+        # Find the highest level that matches the current limit
+        for level, info in sorted(BANK_UPGRADE_LEVELS.items(), reverse=True):
+            if current_limit >= info["limit"]:
+                return level
+                
+        return 0
+
+    async def set_bank_level(self, user_id: int, guild_id: int, level: int) -> bool:
+        """Set user's bank level by updating their bank limit"""
+        if not await self.ensure_connected():
+            return False
+            
+        # Import here to avoid circular imports
+        from cogs.economy.economy.constants import BANK_UPGRADE_LEVELS
+        
+        if level not in BANK_UPGRADE_LEVELS:
+            return False
+            
+        new_limit = BANK_UPGRADE_LEVELS[level]["limit"]
+        
+        result = await self.db.users.update_one(
+            {"_id": str(user_id)},
+            {"$set": {"bank_limit": new_limit}},
+            upsert=True
+        )
+        return result.modified_count > 0 or result.upserted_id is not None
+
     async def get_global_net_worth(self, user_id: int, excluded_guilds: list = None) -> int:
         """Get user's total net worth across all guilds"""
         if not await self.ensure_connected():
