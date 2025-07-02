@@ -247,9 +247,9 @@ class ServiceControls(Static):
         elif button_id == "restart-btn":
             app.run_script("start_bot.sh", "restarting bronx service...")
         elif button_id == "tray-btn":
-            app.run_script("start_tray.sh", "starting system tray...")
+            app.run_script("start_tray.sh", "starting system tray service...")
         elif button_id == "stop-tray-btn":
-            app.stop_tray_application()
+            app.run_script("stop_tray.sh", "stopping system tray service...")
         elif button_id == "status-btn":
             app.run_script("status_bot.sh", "checking bot status...")
         elif button_id == "logs-btn":
@@ -272,11 +272,11 @@ class ServiceControls(Static):
                 "start-btn": "Start the BronxBot Discord service",
                 "stop-btn": "Stop the BronxBot Discord service",
                 "restart-btn": "Restart the BronxBot Discord service",
-                "status-btn": "Check the current status of the bot",
+                "status-btn": "Check the current status of both services",
                 "logs-btn": "View recent bot logs in terminal",
                 "setup-btn": "Run initial setup and configuration",
-                "tray-btn": "Start the system tray monitor",
-                "stop-tray-btn": "Stop the system tray monitor",
+                "tray-btn": "Start the system tray systemd service",
+                "stop-tray-btn": "Stop the system tray systemd service",
                 "uninstall-btn": "Remove BronxBot from the system"
             }
             
@@ -411,8 +411,9 @@ class ProcessManager(Static):
                             except (ValueError, IndexError):
                                 continue
             
-            # Also check systemd service
+            # Also check systemd services
             try:
+                # Check bronxbot service
                 systemd_result = await asyncio.create_subprocess_exec(
                     'systemctl', '--user', 'show', 'bronxbot', '--property=MainPID,ActiveState,SubState',
                     stdout=asyncio.subprocess.PIPE,
@@ -428,7 +429,6 @@ class ProcessManager(Static):
                             systemd_info[key] = value
                     
                     if systemd_info.get('MainPID', '0') != '0':
-                        # Add systemd service info
                         processes.append({
                             'user': 'systemd',
                             'pid': int(systemd_info.get('MainPID', 0)),
@@ -437,6 +437,32 @@ class ProcessManager(Static):
                             'status': f"{systemd_info.get('ActiveState', 'unknown')}/{systemd_info.get('SubState', 'unknown')}",
                             'runtime': "N/A",
                             'command': "bronxbot.service (systemd)"
+                        })
+                
+                # Check bronxbot-tray service
+                tray_result = await asyncio.create_subprocess_exec(
+                    'systemctl', '--user', 'show', 'bronxbot-tray', '--property=MainPID,ActiveState,SubState',
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                tray_stdout, _ = await tray_result.communicate()
+                
+                if tray_result.returncode == 0:
+                    tray_info = {}
+                    for line in tray_stdout.decode().split('\n'):
+                        if '=' in line:
+                            key, value = line.split('=', 1)
+                            tray_info[key] = value
+                    
+                    if tray_info.get('MainPID', '0') != '0':
+                        processes.append({
+                            'user': 'systemd',
+                            'pid': int(tray_info.get('MainPID', 0)),
+                            'cpu': 0.0,
+                            'memory': "N/A",
+                            'status': f"{tray_info.get('ActiveState', 'unknown')}/{tray_info.get('SubState', 'unknown')}",
+                            'runtime': "N/A",
+                            'command': "bronxbot-tray.service (systemd)"
                         })
             except:
                 pass
@@ -504,18 +530,27 @@ class ProcessManager(Static):
         
         for proc in self.processes:
             try:
-                if proc['user'] != 'systemd':  # Don't kill systemd service directly
+                if proc['user'] != 'systemd':  # Don't kill systemd services directly
                     await self.kill_process(proc['pid'])
                     killed_count += 1
                 else:
-                    # Stop systemd service properly
-                    result = await asyncio.create_subprocess_exec(
-                        'systemctl', '--user', 'stop', 'bronxbot',
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE
-                    )
-                    await result.wait()
-                    killed_count += 1
+                    # Stop systemd services properly
+                    if 'bronxbot-tray.service' in proc['command']:
+                        result = await asyncio.create_subprocess_exec(
+                            'systemctl', '--user', 'stop', 'bronxbot-tray',
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE
+                        )
+                        await result.wait()
+                        killed_count += 1
+                    elif 'bronxbot.service' in proc['command']:
+                        result = await asyncio.create_subprocess_exec(
+                            'systemctl', '--user', 'stop', 'bronxbot',
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE
+                        )
+                        await result.wait()
+                        killed_count += 1
             except:
                 continue
         

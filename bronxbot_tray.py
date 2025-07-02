@@ -20,6 +20,11 @@ class BotStatusThread(QThread):
         super().__init__()
         self.running = True
         self.bot_process = None
+        self.last_good_stats = {
+            'guilds': 0,
+            'users': 0,
+            'latency': 0
+        }
     
     def run(self):
         while self.running:
@@ -46,6 +51,8 @@ class BotStatusThread(QThread):
             }
             
             if not service_active:
+                # Clear cached stats when service is not running
+                self.last_good_stats = {'guilds': 0, 'users': 0, 'latency': 0}
                 return stats
             
             # Get stats from multiple sources
@@ -53,6 +60,7 @@ class BotStatusThread(QThread):
             guilds = 0
             users = 0
             latency = 0
+            best_stats_found = False
             
             # Method 1: Check recent systemd journal logs
             try:
@@ -64,89 +72,73 @@ class BotStatusThread(QThread):
                 if journal_result.returncode == 0:
                     journal_lines = journal_result.stdout.split('\n')
                     
+                    # Process lines in reverse order but keep track of best stats
                     for line in reversed(journal_lines[-100:]):  # Check last 100 lines
                         if 'BOT READY' in line:
                             bot_connected = True
-                        elif 'Guilds Connected:' in line or 'Guilds:' in line:
-                            try:
-                                # Look for patterns like "Guilds Connected: 76" or "Guilds: 76"
-                                import re
-                                guild_match = re.search(r'(?:Guilds Connected|Guilds):\s*(\d+)', line)
-                                if guild_match:
-                                    guilds = int(guild_match.group(1))
-                                    bot_connected = True  # If we have guild stats, bot is connected
-                            except:
-                                pass
-                        elif 'Users Accessible:' in line or 'Users:' in line:
+                        elif 'Events:' in line and 'Guilds:' in line and 'Users:' in line:
+                            # Parse complete stats line: "Events: 27 | Guilds: 76 | Users: 30499 | Latency: 39ms"
                             try:
                                 import re
-                                user_match = re.search(r'(?:Users Accessible|Users):\s*(\d+)', line)
-                                if user_match:
-                                    users = int(user_match.group(1))
-                            except:
-                                pass
-                        elif 'Latency:' in line:
-                            try:
-                                import re
-                                latency_match = re.search(r'Latency[:\s]+(\d+)ms', line)
-                                if latency_match:
-                                    latency = int(latency_match.group(1))
-                            except:
-                                pass
-                        elif 'Events:' in line and ('Guilds:' in line or 'Users:' in line):
-                            # Parse stats line: "Events: 27 | Guilds: 76 | Users: 30499 | Latency: 39ms"
-                            try:
-                                import re
-                                print(f"[DEBUG] Found stats line: '{line.strip()}'")
+                                temp_guilds = guilds
+                                temp_users = users
+                                temp_latency = latency
                                 
-                                # Try multiple parsing approaches
-                                events_match = re.search(r'Events:\s*(\d+)', line)
+                                # Parse all components
                                 guilds_match = re.search(r'Guilds:\s*(\d+)', line)
                                 users_match = re.search(r'Users:\s*(\d+)', line)
                                 latency_match = re.search(r'Latency:\s*(\d+)ms', line)
                                 
-                                # Also try a simpler approach - split by | and extract numbers
-                                parts = line.split('|')
-                                for part in parts:
-                                    part = part.strip()
-                                    if 'Guilds:' in part:
-                                        guild_nums = re.findall(r'\d+', part)
-                                        if guild_nums:
-                                            guilds = int(guild_nums[0])
-                                            bot_connected = True
-                                            print(f"[DEBUG] Guilds from split: {guilds}")
-                                    elif 'Users:' in part:
-                                        user_nums = re.findall(r'\d+', part)
-                                        if user_nums:
-                                            users = int(user_nums[0])
-                                            print(f"[DEBUG] Users from split: {users}")
-                                    elif 'Latency:' in part:
-                                        lat_nums = re.findall(r'\d+', part)
-                                        if lat_nums:
-                                            latency = int(lat_nums[0])
-                                            print(f"[DEBUG] Latency from split: {latency}")
-                                
-                                # Original regex approach as backup
                                 if guilds_match:
-                                    guilds = int(guilds_match.group(1))
-                                    bot_connected = True  # If we have guild stats, bot is connected
-                                    print(f"[DEBUG] Guilds from regex: {guilds}")
+                                    temp_guilds = int(guilds_match.group(1))
                                 if users_match:
-                                    users = int(users_match.group(1))
-                                    print(f"[DEBUG] Users from regex: {users}")
+                                    temp_users = int(users_match.group(1))
                                 if latency_match:
-                                    latency = int(latency_match.group(1))
-                                    print(f"[DEBUG] Latency from regex: {latency}")
-                                    
-                                # Debug print to see what we're parsing
-                                print(f"[DEBUG] Parsed stats: Guilds={guilds}, Users={users}, Latency={latency}")
+                                    temp_latency = int(latency_match.group(1))
                                 
-                                # If we found good stats, break to use the most recent
-                                if guilds > 0 and users > 0:
-                                    break
+                                # Only update if we got a complete set of stats
+                                if temp_guilds > 0 and temp_users > 0:
+                                    guilds = temp_guilds
+                                    users = temp_users
+                                    latency = temp_latency
+                                    bot_connected = True
+                                    best_stats_found = True
+                                    print(f"[DEBUG] Complete stats found: Guilds={guilds}, Users={users}, Latency={latency}")
+                                    break  # Use the most recent complete stats
+                                
                             except Exception as e:
                                 print(f"[DEBUG] Error parsing stats line: {e}")
-                                pass
+                                continue
+                        
+                        # Fallback: parse individual stats if no complete line found
+                        elif not best_stats_found:
+                            if 'Guilds Connected:' in line or 'Guilds:' in line:
+                                try:
+                                    import re
+                                    guild_match = re.search(r'(?:Guilds Connected|Guilds):\s*(\d+)', line)
+                                    if guild_match and int(guild_match.group(1)) > 0:
+                                        guilds = int(guild_match.group(1))
+                                        bot_connected = True
+                                except:
+                                    pass
+                            elif 'Users Accessible:' in line or 'Users:' in line:
+                                try:
+                                    import re
+                                    user_match = re.search(r'(?:Users Accessible|Users):\s*(\d+)', line)
+                                    if user_match and int(user_match.group(1)) > 0:
+                                        users = int(user_match.group(1))
+                                except:
+                                    pass
+                            elif 'Latency:' in line:
+                                try:
+                                    import re
+                                    latency_match = re.search(r'Latency[:\s]+(\d+)ms', line)
+                                    if latency_match:
+                                        latency = int(latency_match.group(1))
+                                except:
+                                    pass
+                                    
+                print(f"[DEBUG] Final stats: Connected={bot_connected}, Guilds={guilds}, Users={users}, Latency={latency}")
             except Exception as e:
                 print(f"Journal check failed: {e}")
             
@@ -223,9 +215,26 @@ class BotStatusThread(QThread):
                 'last_activity': 'Connected' if bot_connected else ('Starting...' if service_active else 'Offline')
             })
             
+            # If we got complete stats, save them as last good stats
+            if guilds > 0 and users > 0:
+                self.last_good_stats = {
+                    'guilds': guilds,
+                    'users': users,
+                    'latency': latency
+                }
+            # If current stats are incomplete but we have last good stats, use them
+            elif self.last_good_stats['guilds'] > 0 and self.last_good_stats['users'] > 0:
+                if guilds == 0:
+                    stats['guilds'] = self.last_good_stats['guilds']
+                if users == 0:
+                    stats['users'] = self.last_good_stats['users']
+                if latency == 0:
+                    stats['latency'] = self.last_good_stats['latency']
+                print(f"[DEBUG] Using cached stats: Guilds={stats['guilds']}, Users={stats['users']}, Latency={stats['latency']}")
+            
             # Debug output
-            if bot_connected or guilds > 0 or users > 0:
-                print(f"[DEBUG] Final stats: Connected={bot_connected}, Guilds={guilds}, Users={users}, Latency={latency}")
+            if bot_connected or stats['guilds'] > 0 or stats['users'] > 0:
+                print(f"[DEBUG] Final stats: Connected={bot_connected}, Guilds={stats['guilds']}, Users={stats['users']}, Latency={stats['latency']}")
             
             return stats
             
