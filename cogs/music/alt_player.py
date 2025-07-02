@@ -434,5 +434,5 @@ class AlternativeMusicPlayer(commands.Cog):
         """Clean up when cog is unloaded"""
         asyncio.create_task(self.session.close())
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(AlternativeMusicPlayer(bot))

@@ -130,7 +130,7 @@ class Gambling(commands.Cog):
                 self.logger.error(f"Error in active games cleanup: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute before retrying
 
-async def setup(bot):
+def setup(bot):
     # Load all gambling modules
     bot.add_cog(CardGames(bot))
     bot.add_cog(ChanceGames(bot)) 

@@ -6,6 +6,6 @@ This file maintains backwards compatibility while loading the modular work syste
 # Import the modular work system
 from .work import Work
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the work cog"""
     bot.add_cog(Work(bot))

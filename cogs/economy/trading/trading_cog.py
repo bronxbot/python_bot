@@ -396,16 +396,39 @@ class Trading(commands.Cog):
     async def trade_error(self, ctx, error):
         """Handle trade command errors"""
         if isinstance(error, commands.CommandOnCooldown):
-            await ctx.send(f"⏰ Command on cooldown. Try again in {error.retry_after:.1f} seconds.")
+            embed = nextcord.Embed(
+                title="⏰ Command on Cooldown",
+                description=f"Try again in {error.retry_after:.1f} seconds.",
+                color=nextcord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"❌ Missing required argument: `{error.param.name}`")
+            embed = nextcord.Embed(
+                title="❌ Missing Argument",
+                description=f"Missing required argument: `{error.param.name}`",
+                color=nextcord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"❌ Invalid argument provided.")
+            embed = nextcord.Embed(
+                title="❌ Invalid Argument",
+                description="Invalid argument provided.",
+                color=nextcord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return  # Prevent further error propagation
         else:
             self.logger.error(f"Trade command error: {error}")
-            await ctx.send("❌ An error occurred while processing the command.")
+            embed = nextcord.Embed(
+                title="❌ Command Error",
+                description="An error occurred while processing the command.",
+                color=nextcord.Color.red()
+            )
+            await ctx.send(embed=embed)
 
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the trading cog"""
     bot.add_cog(Trading(bot))

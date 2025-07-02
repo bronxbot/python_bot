@@ -961,5 +961,5 @@ class AutoFishing(commands.Cog):
         except Exception as e:
             await safe_reply(ctx, f"❌ Test failed: {e}")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(AutoFishing(bot))

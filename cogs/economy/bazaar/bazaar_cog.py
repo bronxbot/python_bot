@@ -394,6 +394,6 @@ class Bazaar(commands.Cog):
             await interaction.followup.send("❌ Error processing stock sale.", ephemeral=True)
 
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the bazaar cog"""
     bot.add_cog(Bazaar(bot))

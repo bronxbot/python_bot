@@ -19,6 +19,6 @@ from .stats.dashboard_manager import DashboardManager
 from .stats.guild_manager import GuildManager
 from .stats.command_tracker import CommandTracker
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the cog"""
     bot.add_cog(Stats(bot))

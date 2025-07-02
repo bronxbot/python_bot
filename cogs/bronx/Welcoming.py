@@ -47,7 +47,8 @@ class Welcoming(commands.Cog):
         import os
         welcome_channel = int(os.getenv('WELCOME_CHANNEL', '1385521743724019853'))
 
-        logger.info(f"[+] Member joined: {member} in guild {member.guild.id}")
+        # Disabled to reduce console spam
+        # logger.info(f"[+] Member joined: {member} in guild {member.guild.id}")
 
         greetings = ["hi", "yo", "hola", "bonjour", "hhhjhhhiiiiii", "haiiiiii :3", "haaaaaaaiiiiiii", "hello", "hhiihihihiihihi", 'welcome to the bronx']
         emoji = random.choice(member.guild.emojis) if member.guild.emojis else ""
@@ -78,14 +79,15 @@ class Welcoming(commands.Cog):
     async def on_member_remove(self, member):
         if member.guild.id not in self.main_guilds:
             return
-        logger.info(f"[-] Member left: {member} in guild {member.guild.id}")
+        # Disabled to reduce console spam
+        # logger.info(f"[-] Member left: {member} in guild {member.guild.id}")
         if member.guild.id == 1259717095382319215:
             try:
                 await db.store_stats(member.guild.id, "lost")
             except Exception as e:
                 logger.error(f"Failed to store leave stats: {e}")
 
-async def setup(bot):
+def setup(bot):
     try:
         bot.add_cog(Welcoming(bot))
     except Exception as e:

@@ -416,5 +416,5 @@ class ChanceGames(commands.Cog):
                 self.active_games.remove(ctx.author.id)
             await ctx.reply("❌ An error occurred while setting up the game.")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(ChanceGames(bot))

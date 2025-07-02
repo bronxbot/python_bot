@@ -17,7 +17,7 @@ class Performance(commands.Cog):
         self.bot = bot
         self.logger = CogLogger(self.__class__.__name__)
     
-    @commands.command(name="health", aliases=["status", "perf"])
+    @commands.command(name="health", aliases=["perf"])
     @commands.is_owner()
     async def health_check(self, ctx):
         """Comprehensive bot health check"""
@@ -421,5 +421,5 @@ class Performance(commands.Cog):
         except Exception as e:
             await ctx.reply(f"❌ Error getting scalability metrics: {e}")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Performance(bot))

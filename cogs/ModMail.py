@@ -539,10 +539,11 @@ class ModMail(commands.Cog, ErrorHandler):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the cog"""
     try:
         bot.add_cog(ModMail(bot))

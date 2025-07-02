@@ -3,6 +3,6 @@
 
 from .help_cog import Help
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the Help cog"""
     bot.add_cog(Help(bot))

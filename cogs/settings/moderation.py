@@ -686,5 +686,5 @@ class ConfirmView(nextcord.ui.View):
         self.value = False
         self.stop()
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(ModerationSettings(bot))

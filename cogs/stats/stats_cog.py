@@ -110,8 +110,10 @@ class Stats(commands.Cog, ErrorHandler):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        """Track command errors"""
-        await self.command_tracker.track_command_error(ctx, error)
+        """Track command errors - only for stats commands"""
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
+            await self.command_tracker.track_command_error(ctx, error)
 
     # Utility methods for other cogs to use
     async def get_stats_summary(self) -> Dict:
@@ -129,5 +131,5 @@ class Stats(commands.Cog, ErrorHandler):
         """Handle cog-specific errors"""
         await self.handle_error(ctx, error, "stats")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Stats(bot))

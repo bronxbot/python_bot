@@ -423,5 +423,5 @@ class FishingInventory(commands.Cog, name="FishingInventory"):
             self.logger.error(f"Equip bait error: {e}")
             await ctx.reply("❌ An error occurred while equipping the bait!")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(FishingInventory(bot))

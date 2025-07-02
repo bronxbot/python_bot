@@ -17,6 +17,16 @@ class Error(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             # Ignore command not found errors
             return
+        
+        # Check if this error was already handled by a specific command error handler
+        if ctx.command and hasattr(ctx.command, 'error'):
+            # This command has a specific error handler, let it handle the error
+            return
+        
+        # Check if this error was already handled by a cog's handle_error method
+        if hasattr(error, '_handled_by_cog'):
+            # Error was already handled by a cog, don't duplicate the response
+            return
             
         # Get command info for logging
         command = ctx.command.qualified_name if ctx.command else "unknown"
@@ -133,7 +143,7 @@ class Error(commands.Cog):
                 self.logger.error(f"Failed to send error message: {reply_error}")
                 pass  # Give up if we can't even send a basic message
 
-async def setup(bot):
+def setup(bot):
     try:
         bot.add_cog(Error(bot))
         logger.info("Error handling cog loaded successfully")

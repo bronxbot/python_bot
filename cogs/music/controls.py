@@ -438,5 +438,5 @@ class MusicControls(commands.Cog):
         # This is just an alias for replay with priority over bot restart
         await self.replay_current(ctx)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(MusicControls(bot))

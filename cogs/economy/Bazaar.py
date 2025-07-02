@@ -6,6 +6,6 @@ This file maintains backwards compatibility while loading the modular bazaar sys
 # Import the modular bazaar system
 from .bazaar import Bazaar
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the bazaar cog"""
     bot.add_cog(Bazaar(bot))

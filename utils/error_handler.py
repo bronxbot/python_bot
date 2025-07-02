@@ -32,27 +32,61 @@ class ErrorHandler:
         # Handle common error types
         try:
             if isinstance(error, commands.MissingPermissions):
-                await ctx.reply(f"❌ You need {', '.join(error.missing_permissions)} permission(s) to use this command!")
+                embed = nextcord.Embed(
+                    title="❌ Missing Permissions",
+                    description=f"You need {', '.join(error.missing_permissions)} permission(s) to use this command!",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             elif isinstance(error, commands.BotMissingPermissions):
-                await ctx.reply("❌ I don't have the required permissions for this command!")
+                embed = nextcord.Embed(
+                    title="❌ Bot Missing Permissions",
+                    description="I don't have the required permissions for this command!",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             elif isinstance(error, commands.BadArgument):
-                await ctx.reply(f"❌ Invalid argument provided: {str(error)}")
+                embed = nextcord.Embed(
+                    title="❌ Invalid Argument",
+                    description=f"Invalid argument provided: {str(error)}",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             elif isinstance(error, commands.DisabledCommand):
-                await ctx.reply("❌ This command is currently disabled")
+                embed = nextcord.Embed(
+                    title="❌ Command Disabled",
+                    description="This command is currently disabled",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             elif isinstance(error, commands.NoPrivateMessage):
-                await ctx.reply("❌ This command cannot be used in DMs")
+                embed = nextcord.Embed(
+                    title="❌ Server Only",
+                    description="This command cannot be used in DMs",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             elif isinstance(error, commands.CheckFailure):
-                await ctx.reply("❌ You don't meet the requirements to use this command")
+                embed = nextcord.Embed(
+                    title="❌ Access Denied",
+                    description="You don't meet the requirements to use this command",
+                    color=nextcord.Color.red()
+                )
+                await ctx.reply(embed=embed, delete_after=10)
                 
             else:
+                # For unexpected errors, let the global Error cog handle it
+                # Don't send a user-facing message here
                 pass
                 
         except Exception as e:
             self.logger.error(f"Error handling error: {e}")
-            
+        
+        # Mark that this error has been handled to prevent duplicate processing
+        setattr(error, '_handled_by_cog', True)
         return error_id

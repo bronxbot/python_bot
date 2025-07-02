@@ -602,5 +602,5 @@ class MusicSettings(commands.Cog, ErrorHandler):
         """Handle errors in this cog"""
         await self.handle_error(ctx, error, "music settings")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(MusicSettings(bot))

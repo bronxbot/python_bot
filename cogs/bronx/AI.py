@@ -486,11 +486,11 @@ When users ask about commands, direct them to use `.help` for the most up-to-dat
     async def ai_chat(self, ctx, *, prompt: str):
         """Chat with BronxBot AI powered by Deepseek-8B
         
-        Usage: .ai <your message>
-        Usage: .ai --thinking <your message>  (shows AI reasoning process)
-        Aliases: .chat, .aiask, .bronxai
-        Example: .ai What's the weather like in the Bronx?
-        Example: .ai --thinking Explain quantum physics
+        Usage: <prefix>ai <your message>
+        Usage: <prefix>ai --thinking <your message>  (shows AI reasoning process)
+        Aliases: <prefix>chat, <prefix>aiask, <prefix>bronxai
+        Example: <prefix>ai What's the weather like in the Bronx?
+        Example: <prefix>ai --thinking Explain quantum physics
         """
         # Check for thinking flag
         show_thinking = False
@@ -598,8 +598,8 @@ When users ask about commands, direct them to use `.help` for the most up-to-dat
     async def clear_conversation(self, ctx):
         """Clear your conversation history with the AI
         
-        Usage: .aiclear
-        Aliases: .clearai, .resetai, .clearconvo, .resetconvo
+        Usage: <prefix>aiclear
+        Aliases: <prefix>clearai, <prefix>resetai, <prefix>clearconvo, <prefix>resetconvo
         """
         user_id = ctx.author.id
         
@@ -622,8 +622,8 @@ When users ask about commands, direct them to use `.help` for the most up-to-dat
     async def ai_status(self, ctx):
         """Check AI service status (Admin only)
         
-        Usage: .aistatus
-        Aliases: .aiinfo, .checkai
+        Usage: <prefix>aistatus
+        Aliases: <prefix>aiinfo, <prefix>checkai
         """
         ollama_status = await self.check_ollama_status()
         model_status = await self.check_model_availability() if ollama_status else False
@@ -833,6 +833,6 @@ Another hidden block."""
         self.active_sessions.clear()
         self.user_cooldowns.clear()
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(AI(bot))
     logger.info("AI cog loaded successfully")

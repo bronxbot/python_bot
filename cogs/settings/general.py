@@ -13,6 +13,6 @@ from .general.general_cog import GeneralSettings
 __all__ = ['GeneralSettings']
 
 # Async setup function for the cog
-async def setup(bot):
+def setup(bot):
     """Set up the General Settings cog"""
     bot.add_cog(GeneralSettings(bot))

@@ -231,7 +231,7 @@ class Reminders(commands.Cog, ErrorHandler):
             embed = nextcord.Embed(
                 title="⏰ Reminder Help",
                 description=(
-                    "**Usage:** `.remind <time> <message>`\n\n"
+                    f"**Usage:** `{ctx.prefix}remind <time> <message>`\n\n"
                     "**Time Units:**\n"
                     "• `Y` = years\n"
                     "• `M` = months (capital M)\n" 
@@ -550,23 +550,23 @@ class Reminders(commands.Cog, ErrorHandler):
         """
         Edit an existing reminder by number.
         
-        **Usage:** `.editreminder <number> <new_time> <new_message>`
+        **Usage:** `{ctx.prefix}editreminder <number> <new_time> <new_message>`
         
         **Examples:**
-        • `.editreminder 1 2h 30m Updated reminder message`
-        • `.editreminder 2 1d Call mom instead of dad`
+        • `{ctx.prefix}editreminder 1 2h 30m Updated reminder message`
+        • `{ctx.prefix}editreminder 2 1d Call mom instead of dad`
         
-        Use `.myreminders` to see your reminder numbers.
+        Use `{ctx.prefix}myreminders` to see your reminder numbers.
         """
         if reminder_number is None or new_args is None:
             embed = nextcord.Embed(
                 title="⏰ Edit Reminder Help",
                 description=(
-                    "**Usage:** `.editreminder <number> <new_time> <new_message>`\n\n"
+                    f"**Usage:** `{ctx.prefix}editreminder <number> <new_time> <new_message>`\n\n"
                     "**Examples:**\n"
-                    "• `.editreminder 1 2h 30m Updated message`\n"
-                    "• `.editreminder 2 1d Call mom instead`\n\n"
-                    "Use `.myreminders` to see your reminder numbers."
+                    f"• `{ctx.prefix}editreminder 1 2h 30m Updated message`\n"
+                    f"• `{ctx.prefix}editreminder 2 1d Call mom instead`\n\n"
+                    f"Use `{ctx.prefix}myreminders` to see your reminder numbers."
                 ),
                 color=0x2b2d31
             )
@@ -730,11 +730,12 @@ class Reminders(commands.Cog, ErrorHandler):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
 
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the cog"""
     try:
         bot.add_cog(Reminders(bot))

@@ -71,27 +71,64 @@ class Moderation(commands.Cog, ErrorHandler):
     async def timeout_error(self, ctx, error):
         """Handle timeout command errors"""
         if isinstance(error, commands.MissingPermissions):
-            await ctx.reply("❌ You don't have permission to timeout members!")
+            embed = nextcord.Embed(
+                title="❌ Missing Permissions",
+                description="You need the `Moderate Members` permission to timeout members!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.MemberNotFound):
-            await ctx.reply("❌ Member not found!")
+            embed = nextcord.Embed(
+                title="❌ Member Not Found",
+                description="Could not find the specified member!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return
         elif isinstance(error, commands.BadArgument):
-            await ctx.reply("❌ Invalid duration format! Use s/m/h/d/w (e.g. 1h, 1d)")
+            embed = nextcord.Embed(
+                title="❌ Invalid Duration",
+                description="Invalid duration format! Use s/m/h/d/w (e.g. 1h, 1d)",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply("❌ Please mention a member to timeout. Usage: `!timeout <member> <duration> [reason]`")
+            embed = nextcord.Embed(
+                title="❌ Missing Arguments",
+                description=f"Please mention a member to timeout.\n**Usage:** `{ctx.prefix}timeout <member> <duration> [reason]`",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return
         else:
+            # Let the global error handler deal with unexpected errors
             await self.handle_error(ctx, error, "timeout")
 
     @kick.error
     async def kick_error(self, ctx, error):
         """Handle kick command errors"""
         if isinstance(error, commands.MissingPermissions):
-            await ctx.reply("❌ You don't have permission to kick members!")
+            embed = nextcord.Embed(
+                title="❌ Missing Permissions",
+                description="You need the `Kick Members` permission to kick members!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.MemberNotFound):
-            await ctx.reply("❌ Member not found!")
+            embed = nextcord.Embed(
+                title="❌ Member Not Found",
+                description="The specified member could not be found!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         else:
             await self.handle_error(ctx, error, "kick")
 
-async def setup(bot):
+def setup(bot):
     logger = CogLogger("Moderation")
     try:
         bot.add_cog(Moderation(bot))

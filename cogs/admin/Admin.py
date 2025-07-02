@@ -6,6 +6,6 @@ This file maintains backwards compatibility while loading the modular admin syst
 # Import the modular admin system
 from .admin import Admin
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the admin cog"""
     bot.add_cog(Admin(bot))

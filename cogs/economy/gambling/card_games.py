@@ -708,5 +708,5 @@ class CardGames(commands.Cog):
         """Check if hand is a blackjack (21 with 2 cards)"""
         return len(hand) == 2 and self._hand_value(hand) == 21
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(CardGames(bot))

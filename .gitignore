@@ -43,3 +43,7 @@ botEvents/__pycache__/onCommand.cpython-312.pyc
 botEvents/__pycache__/onMessage.cpython-312.pyc
 botEvents/__pycache__/onReady.cpython-312.pyc
 dev_env
+
+# Service files
+bronxbot.service
+start_tray.sh

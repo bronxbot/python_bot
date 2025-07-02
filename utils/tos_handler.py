@@ -57,9 +57,10 @@ By using BronxBot, you agree to the following terms:
 class TOSModal(nextcord.ui.Modal):
     """Terms of Service acceptance modal"""
     
-    def __init__(self, original_user_id: int):
+    def __init__(self, original_user_id: int, prefix: str = "."):
         super().__init__(title="Terms of Service Agreement")
         self.original_user_id = original_user_id
+        self.prefix = prefix
     
     agreement = nextcord.ui.TextInput(
         label="Type 'I AGREE' to accept the Terms of Service",
@@ -73,7 +74,7 @@ class TOSModal(nextcord.ui.Modal):
         if interaction.user.id != self.original_user_id:
             embed = nextcord.Embed(
                 title="❌ Access Denied",
-                description="You cannot accept terms for someone else. Use `.tos` to accept your own terms.",
+                description=f"You cannot accept terms for someone else. Use `{self.prefix}tos` to accept your own terms.",
                 color=nextcord.Color.red()
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -150,16 +151,17 @@ class TOSModal(nextcord.ui.Modal):
 class TOSView(nextcord.ui.View):
     """Terms of Service view with buttons"""
     
-    def __init__(self, original_user_id: int):
+    def __init__(self, original_user_id: int, prefix: str = "."):
         super().__init__(timeout=300)
         self.original_user_id = original_user_id
+        self.prefix = prefix
     
     async def interaction_check(self, interaction: nextcord.Interaction) -> bool:
         """Check if the user interacting is the original user"""
         if interaction.user.id != self.original_user_id:
             embed = nextcord.Embed(
                 title="❌ Access Denied",
-                description="This is not your Terms of Service prompt. Use `.tos` to accept your own terms.",
+                description=f"This is not your Terms of Service prompt. Use `{self.prefix}tos` to accept your own terms.",
                 color=nextcord.Color.red()
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -177,7 +179,7 @@ class TOSView(nextcord.ui.View):
     
     @nextcord.ui.button(label="✅ Accept Terms", style=nextcord.ButtonStyle.success)
     async def accept_terms(self, interaction: nextcord.Interaction, button: nextcord.ui.Button):
-        modal = TOSModal(self.original_user_id)
+        modal = TOSModal(self.original_user_id, self.prefix)
         await interaction.response.send_modal(modal)
     
     @nextcord.ui.button(label="❌ Decline", style=nextcord.ButtonStyle.danger)
@@ -185,7 +187,7 @@ class TOSView(nextcord.ui.View):
         embed = nextcord.Embed(
             title="❌ Terms Declined",
             description="You must accept our Terms of Service to use BronxBot features.\n"
-                       "You can review and accept them anytime with `.tos`",
+                       f"You can review and accept them anytime with `{self.prefix}tos`",
             color=nextcord.Color.red()
         )
         await interaction.response.edit_message(embed=embed, view=None)
@@ -205,6 +207,7 @@ async def prompt_tos_acceptance(ctx) -> bool:
     if await check_tos_acceptance(ctx.author.id):
         return True
     
+    prefix = ctx.prefix
     embed = nextcord.Embed(
         title="📋 Terms of Service Required",
         description="Welcome to BronxBot! Before you can use our features, please review and accept our Terms of Service.",
@@ -228,7 +231,7 @@ async def prompt_tos_acceptance(ctx) -> bool:
         inline=False
     )
     
-    view = TOSView(ctx.author.id)
+    view = TOSView(ctx.author.id, prefix)
     await ctx.reply(embed=embed, view=view)
     return False
 
@@ -245,12 +248,12 @@ class TOSCommands(commands.Cog):
         user_accepted = await check_tos_acceptance(ctx.author.id)
         
         embed = nextcord.Embed(
-            title="📋 BronxBot Terms of Service",
+            title="our tos",
             color=nextcord.Color.blue() if user_accepted else nextcord.Color.yellow()
         )
         
         if user_accepted:
-            embed.description = f"✅ You have accepted Terms of Service v{TermsOfService.TOS_VERSION}"
+            embed.description = f"thx for accepting v{TermsOfService.TOS_VERSION}! we hope you enjoy <3"
             embed.add_field(
                 name="Need to review?",
                 value="Click the button below to read the full terms.",
@@ -264,20 +267,20 @@ class TOSCommands(commands.Cog):
                 if interaction.user.id != ctx.author.id:
                     embed = nextcord.Embed(
                         title="❌ Access Denied",
-                        description="This is not your Terms of Service display. Use `.tos` to view your own terms.",
+                        description=f"This is not your Terms of Service display. Use `{ctx.prefix}tos` to view your own terms.",
                         color=nextcord.Color.red()
                     )
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                     return
                 
                 terms_embed = nextcord.Embed(
-                    title="📋 Full Terms of Service",
+                    title="full tos",
                     description=TermsOfService.TOS_TEXT,
                     color=nextcord.Color.blue()
                 )
                 await interaction.response.send_message(embed=terms_embed, ephemeral=True)
             
-            button = nextcord.ui.Button(label="📋 Read Full Terms", style=nextcord.ButtonStyle.secondary)
+            button = nextcord.ui.Button(label="read full terms", style=nextcord.ButtonStyle.secondary)
             button.callback = show_full_terms
             view.add_item(button)
             
@@ -289,21 +292,21 @@ class TOSCommands(commands.Cog):
     async def tos_info(self, ctx):
         """Show detailed TOS information"""
         embed = nextcord.Embed(
-            title="📋 Terms of Service Information",
+            title="our tos",
             color=nextcord.Color.blue()
         )
         
         user_accepted = await check_tos_acceptance(ctx.author.id)
         
         embed.add_field(
-            name="Current Version",
+            name="current version",
             value=f"Version {TermsOfService.TOS_VERSION}",
             inline=True
         )
         
         embed.add_field(
-            name="Your Status",
-            value="✅ Accepted" if user_accepted else "❌ Not Accepted",
+            name="current status",
+            value="accepted" if user_accepted else "not accepted",
             inline=True
         )
         
@@ -312,25 +315,24 @@ class TOSCommands(commands.Cog):
             if user and user.get("tos_accepted_at"):
                 accepted_date = user["tos_accepted_at"][:10]  # Just the date
                 embed.add_field(
-                    name="Accepted Date",
+                    name="accepted on",
                     value=accepted_date,
                     inline=True
                 )
         
         embed.add_field(
-            name="What's Covered",
-            value="• Data collection and privacy\n"
-                  "• Acceptable use policies\n"
-                  "• Economy system rules\n"
-                  "• Liability and termination",
+            name="what's covered",
+            value="• data collection and privacy\n"
+              "• acceptable use policies\n"
+              "• economy system rules\n",
             inline=False
         )
         
         embed.add_field(
-            name="Commands",
-            value=f"`{ctx.prefix}tos` - View/accept terms\n"
-                  f"`{ctx.prefix}privacy` - Privacy policy\n"
-                  f"`{ctx.prefix}support` - Get help",
+            name="commands",
+            value=f"`{ctx.prefix}tos` - view/accept terms\n"
+              f"`{ctx.prefix}privacy` - privacy policy\n"
+              f"`{ctx.prefix}support` - get help",
             inline=False
         )
         

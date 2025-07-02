@@ -188,5 +188,5 @@ class FishingStats(commands.Cog, name="FishingStats"):
             self.logger.error(f"Fish stats error: {e}")
             await ctx.reply("❌ An error occurred while calculating fishing statistics!")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(FishingStats(bot))

@@ -330,5 +330,5 @@ class GeneralSettings(commands.Cog, ErrorHandler):
         """Handle cog-specific errors"""
         await self.handle_error(ctx, error, "general settings")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(GeneralSettings(bot))

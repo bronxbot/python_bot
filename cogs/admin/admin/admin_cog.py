@@ -285,26 +285,26 @@ class Admin(commands.Cog):
         stats = await self.system_admin.get_bot_stats()
         
         if not stats:
-            return await ctx.send("❌ Unable to retrieve bot statistics")
+            return await ctx.send("unable to retrieve bot statistics")
         
         embed = nextcord.Embed(
-            title="📊 Bot Statistics",
+            title="bot stats",
             color=0x3498db
         )
         
         embed.add_field(
-            name="🏛️ **General**",
-            value=f"**Guilds:** {stats.get('guilds', 0):,}\n"
-                  f"**Users:** {stats.get('users', 0):,}\n"
-                  f"**Latency:** {stats.get('latency_ms', 0)}ms",
+            name="overall**",
+            value=f"**guilds:** {stats.get('guilds', 0):,}\n"
+                  f"**users:** {stats.get('users', 0):,}\n"
+                  f"**latency:** {stats.get('latency_ms', 0)}ms",
             inline=True
         )
         
         embed.add_field(
-            name="💾 **Resources**",
-            value=f"**Memory:** {stats.get('memory_mb', 0):.1f} MB\n"
+            name="resources",
+            value=f"**memory:** {stats.get('memory_mb', 0):.1f} MB\n"
                   f"**CPU:** {stats.get('cpu_percent', 0):.1f}%\n"
-                  f"**Uptime:** {stats.get('uptime_seconds', 0):,}s",
+                  f"**uptime:** {stats.get('uptime_seconds', 0):,}s",
             inline=True
         )
         
@@ -314,10 +314,12 @@ class Admin(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         """Handle admin command errors"""
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send(ERROR_MESSAGES["no_permission"])
-        elif isinstance(error, commands.CheckFailure):
-            await ctx.send(ERROR_MESSAGES["no_permission"])
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
+            if isinstance(error, commands.MissingPermissions):
+                await ctx.send(ERROR_MESSAGES["no_permission"])
+            elif isinstance(error, commands.CheckFailure):
+                await ctx.send(ERROR_MESSAGES["no_permission"])
     
     async def rotate_global_buff(self):
         """Manually rotate global buff"""
@@ -330,6 +332,6 @@ class Admin(commands.Cog):
     #     await self.rotate_global_buff()
 
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the admin cog"""
     bot.add_cog(Admin(bot))

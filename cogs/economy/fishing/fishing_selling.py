@@ -298,5 +298,5 @@ class FishingSelling(commands.Cog, name="FishingSelling"):
         else:
             await ctx.reply("❌ Failed to sell any fish!")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(FishingSelling(bot))

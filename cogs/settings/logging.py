@@ -734,5 +734,5 @@ class BulkChannelView(nextcord.ui.View):
         )
         await interaction.response.edit_message(embed=embed, view=None)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(LoggingSettings(bot))

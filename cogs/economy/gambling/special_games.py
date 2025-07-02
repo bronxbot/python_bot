@@ -557,5 +557,5 @@ class SpecialGames(commands.Cog):
         
         await channel.send(embed=result_embed)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(SpecialGames(bot))

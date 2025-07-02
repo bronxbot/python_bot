@@ -632,5 +632,5 @@ class MusicQueue(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(MusicQueue(bot))

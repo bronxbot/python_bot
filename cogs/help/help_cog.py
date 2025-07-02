@@ -46,15 +46,13 @@ class Help(commands.Cog, ErrorHandler):
         await ctx.reply(embed=embed)
 
     @nextcord.slash_command(description="Get the bot's invite link and support server")
-    async def invite(self, interaction: nextcord.Interaction):
+    async def invite_slash(self, interaction: nextcord.Interaction):
         """Slash command version of invite"""
         embed = nextcord.Embed(
             title="🔗 Invite BronxBot",
             description=(
-                "**Bot Invite Link:**\n"
                 f"[Add BronxBot to your server](https://discord.com/api/oauth2/authorize?client_id={self.bot.user.id}&permissions=8&scope=bot)\n\n"
-                "**Support Server:**\n"
-                "[Join our Discord](https://discord.gg/bronx)\n\n"
+                "[Support Server](https://discord.gg/jvyYWkj3ts)\n\n"
                 "**Features:**\n"
                 "• Economy & Gambling\n"
                 "• Music & Entertainment\n"
@@ -112,7 +110,7 @@ class Help(commands.Cog, ErrorHandler):
             # Try to find specific command or cog
             command = self.bot.get_command(command_or_cog.lower())
             if command:
-                embed = self.formatter.create_command_embed(command)
+                embed = self.formatter.create_command_embed(command, ctx.prefix)
                 await ctx.reply(embed=embed)
                 return
             
@@ -141,10 +139,14 @@ class Help(commands.Cog, ErrorHandler):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        """Handle help command errors"""
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        """Handle help command errors only for this cog's commands"""
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
+            # Don't let the error propagate to other handlers
+            return
+        # Let other handlers process errors for other cogs
 
-async def setup(bot):
+def setup(bot):
     """Setup function for the Help cog"""
     bot.add_cog(Help(bot))

@@ -470,23 +470,42 @@ class Fun(commands.Cog, ErrorHandler):
     @ball8.error
     async def text_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply("```please provide some text to predict```")
+            embed = nextcord.Embed(
+                title="❌ Missing Text",
+                description="Please provide some text to predict",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+            return  # Prevent further error propagation
 
     @lovecalc.error
     @hack.error
     async def user_command_error(self, ctx, error):
         if isinstance(error, commands.MemberNotFound):
-            await ctx.reply("```user not found in this server```")
+            embed = nextcord.Embed(
+                title="❌ User Not Found",
+                description="User not found in this server",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply("```please mention a user```")
+            embed = nextcord.Embed(
+                title="❌ Missing User",
+                description="Please mention a user",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+            return  # Prevent further error propagation
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
 
 
-async def setup(bot):
+def setup(bot):
     try:
         logger = CogLogger("Fun")
         bot.add_cog(Fun(bot))

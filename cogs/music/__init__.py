@@ -11,7 +11,7 @@ from .alt_player import AlternativeMusicPlayer
 
 __all__ = ['MusicCore', 'MusicQueue', 'MusicControls', 'AlternativeMusicPlayer']
 
-async def setup(bot):
+def setup(bot):
     """Setup function to load all music cogs - Alternative player is now primary"""
     # Load core music functionality first
     bot.add_cog(MusicCore(bot))

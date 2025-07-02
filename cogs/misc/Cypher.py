@@ -265,5 +265,5 @@ Please send your KEY now (or in format key:message):```""")
         # 2. Very uncommon character distribution (>80% uncommon)
         return ratio > 0.4 or uncommon_ratio > 0.8
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Cypher(bot))

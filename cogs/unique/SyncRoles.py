@@ -76,7 +76,8 @@ class SyncRoles(commands.Cog):
         try:
             return await guild.fetch_member(member_id)
         except nextcord.NotFound:
-            self.logger.info(f"Member {member_id} not found in guild {guild.id}")
+            # Reduce spam - use debug level for members not in server
+            self.logger.debug(f"Member {member_id} not found in guild {guild.id}")
             return None
         except nextcord.Forbidden:
             self.logger.warning(f"Missing permissions to fetch members in guild {guild.id}")
@@ -177,7 +178,8 @@ class SyncRoles(commands.Cog):
                 if role:
                     new_role_objects.append(role)
                 else:
-                    self.logger.warning(f"Role ID {role_id} not found in guild {target_guild.id}")
+                    # Reduce spam - use debug level for missing roles
+                    self.logger.debug(f"Role ID {role_id} not found in guild {target_guild.id}")
             
             try:
                 await target_member.edit(roles=new_role_objects)
@@ -205,7 +207,7 @@ class SyncRoles(commands.Cog):
         await self.sync_roles(member, ctx.guild)
         await ctx.send(f"Force-synced roles for {member.display_name}")
 
-async def setup(bot):
+def setup(bot):
     logger = CogLogger("SyncRoles")
     try:
         bot.add_cog(SyncRoles(bot))

@@ -652,5 +652,5 @@ class FishingCore(commands.Cog, name="FishingCore"):
             self.logger.error(f"Fish gear error: {e}")
             await ctx.reply("❌ An error occurred while viewing your gear!")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(FishingCore(bot))

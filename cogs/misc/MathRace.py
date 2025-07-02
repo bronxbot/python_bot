@@ -49,7 +49,7 @@ class MathRace(commands.Cog):
             for level, example in examples.items():
                 embed.add_field(name=f"Level {level}", value=example, inline=False)
 
-            embed.set_footer(text="Usage: .mathrace @user [1-30]\nYou can also use `.mathrace help`")
+            embed.set_footer(text=f"Usage: {ctx.prefix}mathrace @user [1-30]\nYou can also use `{ctx.prefix}mathrace help`")
             return await ctx.send(embed=embed)
 
         # Validate opponent
@@ -366,7 +366,7 @@ class MathGame:
         
         return problem, answer
 
-async def setup(bot):
+def setup(bot):
     try:
         bot.add_cog(MathRace(bot))
     except Exception as e:

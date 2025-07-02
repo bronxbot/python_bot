@@ -402,7 +402,7 @@ class Multiplayer(commands.Cog):
                 self.logger.error(f"Error in active games cleanup: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute before retrying
 
-async def setup(bot):
+def setup(bot):
     try:
         bot.add_cog(Multiplayer(bot))
     except Exception as e:

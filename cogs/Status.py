@@ -2,7 +2,7 @@ import nextcord
 from nextcord.ext import commands
 import datetime
 from cogs.logging.logger import CogLogger
-from cogs.Help import HelpPaginator
+# from cogs.Help import HelpPaginator  # Commented out - module not found
 
 class Status(commands.Cog):
     def __init__(self, bot):
@@ -107,15 +107,12 @@ class Status(commands.Cog):
 
             pages.append(embed)
 
-        # Improved paginator: disables buttons if only one page
-        view = HelpPaginator(pages, ctx.author)
-        view.update_buttons()
-        has_select = hasattr(view, "select") and getattr(view.select, "options", None)
-        if has_select and view.select.options:
-            message = await ctx.reply(embed=pages[0], view=view)
+        # Simple embed display (HelpPaginator not available)
+        if pages:
+            # Just send the first page for now
+            await ctx.reply(embed=pages[0])
         else:
-            message = await ctx.reply(embed=pages[0])
-        view.message = message
+            await ctx.reply("No status information available.")
 
     @commands.Cog.listener()
     async def on_shard_ready(self, shard_id):
@@ -145,5 +142,5 @@ class Status(commands.Cog):
             self.shard_stats[shard_id]['status'] = 'online'
             self.shard_stats[shard_id]['last_seen'] = datetime.datetime.now()
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Status(bot))

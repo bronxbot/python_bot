@@ -36,3 +36,6 @@ psutil==7.0.0
 
 # setuptools required due to distutils being removed in 3.12
 setuptools==80.9.0
+
+# System Tray (optional - for background management)
+PyQt5==5.15.10

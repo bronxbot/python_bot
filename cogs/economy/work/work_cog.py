@@ -470,5 +470,5 @@ class Work(commands.Cog):
         view = CoworkersView(ctx.author.id, user_job['job_id'])
         await safe_reply(ctx, embed=embed, view=view)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Work(bot))

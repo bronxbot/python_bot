@@ -7,6 +7,6 @@ from .general_cog import GeneralSettings
 
 __all__ = ['GeneralSettings']
 
-async def setup(bot):
+def setup(bot):
     """Set up the General Settings cog"""
     bot.add_cog(GeneralSettings(bot))

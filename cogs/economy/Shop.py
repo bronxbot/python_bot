@@ -482,5 +482,5 @@ class Shop(commands.Cog):
                 color=nextcord.Color.red()
             )
             await ctx.send(embed=embed)
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Shop(bot))

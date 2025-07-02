@@ -355,5 +355,5 @@ class MusicCore(commands.Cog):
             )
             await message.edit(embed=embed)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(MusicCore(bot))

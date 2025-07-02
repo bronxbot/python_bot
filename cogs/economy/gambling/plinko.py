@@ -381,5 +381,5 @@ class Plinko(commands.Cog):
         # Use proper spacing for better alignment
         return " ".join(display)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Plinko(bot))

@@ -37,7 +37,7 @@ class FishingMain(commands.Cog, name="Fishing"):
             self.logger.error(f"Failed to reload fishing modules: {e}")
             await ctx.reply("❌ Failed to reload fishing modules!")
 
-async def setup(bot):
+def setup(bot):
     """Setup function to load all fishing modules"""
     
     # Load all fishing sub-modules

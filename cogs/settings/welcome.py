@@ -959,5 +959,5 @@ class WelcomeSettings(commands.Cog, ErrorHandler):
         """Handle errors in this cog"""
         await self.handle_error(ctx, error, "welcome settings")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(WelcomeSettings(bot))

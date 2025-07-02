@@ -113,14 +113,21 @@ class Text(commands.Cog, ErrorHandler):
     @emojify.error
     async def text_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply("```please provide some text to transform```")
+            embed = nextcord.Embed(
+                title="❌ Missing Text",
+                description="Please provide some text to transform",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed)
+            return  # Prevent further error propagation
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
 
-async def setup(bot):
+def setup(bot):
     try:
         logger = CogLogger("Text")
         bot.add_cog(Text(bot))

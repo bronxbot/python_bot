@@ -12,7 +12,12 @@ logger = CogLogger('VoteBans')
 class VoteBans(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.main_guilds = self.bot.MAIN_GUILD_IDS
+        # Handle missing MAIN_GUILD_IDS gracefully
+        self.main_guilds = getattr(self.bot, 'MAIN_GUILD_IDS', [
+            1259717095382319215,  # Main server
+            1299747094449623111,  # South Bronx
+            1142088882222022786   # Long Island
+        ])
         self.vote_channel_id = 1367979611748696284
         self.staff_role_id = 1259728436377817100
         self.required_votes = 25
@@ -720,7 +725,7 @@ class VoteBans(commands.Cog):
         self.save_data()
         await ctx.send(f"Cleaned up {cleaned} completed votes. {after_count} active votes remaining.")
 
-async def setup(bot):
+def setup(bot):
     try:
         bot.add_cog(VoteBans(bot))
     except Exception as e:

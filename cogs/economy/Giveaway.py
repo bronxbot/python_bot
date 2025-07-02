@@ -441,13 +441,24 @@ class Giveaway(commands.Cog):
     async def handle_error(self, ctx: commands.Context, error: Exception, command_name: str = ""):
         """Generic error handler for giveaway commands"""
         self.logger.error(f"Error in {command_name}: {error}")
-        await ctx.reply("❌ An unexpected error occurred. Please try again later.")
+        embed = nextcord.Embed(
+            title="❌ Command Error",
+            description="An unexpected error occurred. Please try again later.",
+            color=nextcord.Color.red()
+        )
+        await ctx.reply(embed=embed, delete_after=10)
 
     @donate_to_server.error
     async def donate_error(self, ctx, error):
         """Handle donate command errors"""
         if isinstance(error, commands.BadArgument):
-            await ctx.reply("❌ Please provide a valid amount to donate!")
+            embed = nextcord.Embed(
+                title="❌ Invalid Argument",
+                description="Please provide a valid amount to donate!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         else:
             await self.handle_error(ctx, error, "donate")
 
@@ -455,9 +466,21 @@ class Giveaway(commands.Cog):
     async def create_giveaway_error(self, ctx, error):
         """Handle create giveaway command errors"""
         if isinstance(error, commands.MissingPermissions):
-            await ctx.reply("❌ You don't have permission to create giveaways!")
+            embed = nextcord.Embed(
+                title="❌ Missing Permissions",
+                description="You need the appropriate permissions to create giveaways!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         elif isinstance(error, commands.BadArgument):
-            await ctx.reply("❌ Invalid giveaway parameters! Usage: `.giveaway create <amount> <duration> [description]`")
+            embed = nextcord.Embed(
+                title="❌ Invalid Arguments",
+                description=f"Invalid giveaway parameters!\n**Usage:** `{ctx.prefix}giveaway create <amount> <duration> [description]`",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         else:
             await self.handle_error(ctx, error, "create_giveaway")
 
@@ -465,11 +488,17 @@ class Giveaway(commands.Cog):
     async def end_giveaway_error(self, ctx, error):
         """Handle end giveaway command errors"""
         if isinstance(error, commands.MissingPermissions):
-            await ctx.reply("❌ You don't have permission to end giveaways!")
+            embed = nextcord.Embed(
+                title="❌ Missing Permissions",
+                description="You need the appropriate permissions to end giveaways!",
+                color=nextcord.Color.red()
+            )
+            await ctx.reply(embed=embed, delete_after=10)
+            return  # Prevent further error propagation
         else:
             await self.handle_error(ctx, error, "end_giveaway")
 
-async def setup(bot):
+def setup(bot):
     logger = CogLogger("Giveaway")
     try:
         bot.add_cog(Giveaway(bot))

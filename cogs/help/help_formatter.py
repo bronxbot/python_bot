@@ -57,28 +57,29 @@ class HelpFormatter:
         
         return embed
 
-    def create_command_embed(self, command: commands.Command) -> nextcord.Embed:
+    def create_command_embed(self, command: commands.Command, prefix: str = ".") -> nextcord.Embed:
         """Create an embed for a specific command"""
         embed = nextcord.Embed(
             title=f"📋 Command: {command.qualified_name}",
             color=0x2b2d31
         )
         
-        # Command description
+        # Command description with prefix replacement
         description = command.help or "No description available"
+        description = description.replace("<prefix>", prefix)
         embed.description = description
         
         # Usage
         signature = self.utils.get_command_signature(command)
         embed.add_field(
             name="📝 Usage",
-            value=f"`.{signature}`",
+            value=f"`{prefix}{signature}`",
             inline=False
         )
         
         # Aliases
         if hasattr(command, 'aliases') and command.aliases:
-            aliases = ", ".join([f"`.{alias}`" for alias in command.aliases])
+            aliases = ", ".join([f"`{prefix}{alias}`" for alias in command.aliases])
             embed.add_field(
                 name="🔄 Aliases",
                 value=aliases,

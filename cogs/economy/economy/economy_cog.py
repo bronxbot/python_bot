@@ -531,5 +531,5 @@ class Economy(commands.Cog):
             self.logger.error(f"Inventory error for {member.id}: {e}")
             await safe_reply(ctx, "An error occurred while fetching the inventory.")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(Economy(bot))

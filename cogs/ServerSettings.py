@@ -288,9 +288,15 @@ class ServerSettings(commands.Cog, ErrorHandler):
     @prefix.error 
     async def prefix_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Please provide both an action (add/remove) and a prefix")
+            embed = nextcord.Embed(
+                title="❌ Missing Arguments",
+                description="Please provide both an action (add/remove) and a prefix",
+                color=nextcord.Color.red()
+            )
+            await ctx.send(embed=embed)
+            return  # Prevent further error propagation
         else:
             await self.handle_error(ctx, error, "prefix")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(ServerSettings(bot))

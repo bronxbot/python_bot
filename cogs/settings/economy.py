@@ -566,5 +566,5 @@ class EconomySettings(commands.Cog, ErrorHandler):
         """Handle errors in this cog"""
         await self.handle_error(ctx, error, "economy settings")
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(EconomySettings(bot))

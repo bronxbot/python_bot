@@ -162,9 +162,19 @@ class TicTacToe(commands.Cog):
     @tictactoe.error
     async def tictactoe_error(self, interaction: nextcord.Interaction, error):
         if hasattr(error, 'code') and error.code == 50013:  # Missing permissions
-            await interaction.response.send_message("❌ You don't have permission to use this command!", ephemeral=True)
+            embed = nextcord.Embed(
+                title="❌ Missing Permissions",
+                description="You don't have permission to use this command!",
+                color=nextcord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            await interaction.response.send_message("❌ An error occurred while starting the game!", ephemeral=True)
+            embed = nextcord.Embed(
+                title="❌ Game Error",
+                description="An error occurred while starting the game!",
+                color=nextcord.Color.red()
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
-async def setup(bot):
+def setup(bot):
     bot.add_cog(TicTacToe(bot))

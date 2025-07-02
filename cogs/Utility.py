@@ -491,7 +491,7 @@ class Utility(commands.Cog, ErrorHandler):
         if not emojis:
             embed = nextcord.Embed(
                 title="❌ No Emojis Provided",
-                description="Please provide at least one emoji to steal.\n\n**Usage:** `.steal <emoji1> [emoji2] [emoji3]...`",
+                description=f"Please provide at least one emoji to steal.\n\n**Usage:** `{ctx.prefix}steal <emoji1> [emoji2] [emoji3]...`",
                 color=0xff0000
             )
             return await ctx.reply(embed=embed)
@@ -660,7 +660,7 @@ class Utility(commands.Cog, ErrorHandler):
         if not url.startswith(('http://', 'https://')):
             embed = nextcord.Embed(
                 title="❌ Invalid URL",
-                description="URL must start with `http://` or `https://`\n\n**Usage:** `.stealurl <url> [name]`",
+                description=f"URL must start with `http://` or `https://`\n\n**Usage:** `{ctx.prefix}stealurl <url> [name]`",
                 color=0xff0000
             )
             return await ctx.reply(embed=embed)
@@ -1082,7 +1082,8 @@ class Utility(commands.Cog, ErrorHandler):
 
     @commands.Cog.listener() 
     async def on_command_error(self, ctx, error):
-        if ctx.command and ctx.command.cog_name == self.__class__.__name__:
+        # Only handle errors for commands that belong to this cog
+        if ctx.command and ctx.command.cog == self:
             await self.handle_error(ctx, error)
 
     def get_command_help(self) -> list[nextcord.Embed]:
@@ -1663,7 +1664,7 @@ class Utility(commands.Cog, ErrorHandler):
                 
         return static_count, animated_count
 
-async def setup(bot):
+def setup(bot):
     logger = CogLogger("Utility")
     try:
         bot.add_cog(Utility(bot))

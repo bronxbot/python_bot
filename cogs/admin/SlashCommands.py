@@ -177,7 +177,7 @@ class SlashCommands(commands.Cog):
             await ctx.reply(f"❌ Error syncing slash commands: {str(e)}")
             logger.error(f"Error syncing slash commands to current guild: {e}")
 
-async def setup(bot):
+def setup(bot):
     cog = SlashCommands(bot)
     bot.add_cog(cog)
     
