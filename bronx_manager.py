@@ -272,11 +272,11 @@ class ServiceControls(Static):
                 "start-btn": "Start the BronxBot Discord service",
                 "stop-btn": "Stop the BronxBot Discord service",
                 "restart-btn": "Restart the BronxBot Discord service",
-                "status-btn": "Check the current status of both services",
+                "status-btn": "Check the current status of bot service and tray",
                 "logs-btn": "View recent bot logs in terminal",
                 "setup-btn": "Run initial setup and configuration",
-                "tray-btn": "Start the system tray systemd service",
-                "stop-tray-btn": "Stop the system tray systemd service",
+                "tray-btn": "Start the system tray application manually",
+                "stop-tray-btn": "Stop the system tray application",
                 "uninstall-btn": "Remove BronxBot from the system"
             }
             

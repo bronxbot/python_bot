@@ -1,5 +1,4 @@
 #!/bin/bash
-echo "Stopping BronxBot services..."
-systemctl --user stop bronxbot-tray
+echo "Stopping BronxBot service..."
 systemctl --user stop bronxbot
-echo "STOPPED: BronxBot and tray stopped"
+echo "STOPPED: BronxBot stopped"
