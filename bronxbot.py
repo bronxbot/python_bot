@@ -169,8 +169,12 @@ class BronxBot(commands.AutoShardedBot):
     
     def _track_event(self):
         """Helper method to track events"""
-        self.events_tracked += 1
-        self._events_since_stats += 1
+        try:
+            self.events_tracked += 1
+            self._events_since_stats += 1
+        except Exception:
+            # Avoid recursion by not calling _track_event in error handling
+            pass
     
     def load_console_settings(self):
         """Load console display settings from config"""
@@ -539,7 +543,11 @@ class BronxBot(commands.AutoShardedBot):
     
     # Error handling
     async def on_error(self, event, *args, **kwargs):
-        self._track_event()
+        try:
+            self._track_event()
+        except Exception:
+            # Avoid recursion if _track_event fails
+            pass
         print(format_event("ERROR", f"Error in {event}", Colors.BRIGHT_RED))
     
     @tasks.loop(seconds=30)

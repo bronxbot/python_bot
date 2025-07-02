@@ -9,7 +9,7 @@ It's mainly written by one dude, but with all the [contributors on github](https
 # BronxBots Features
 
 ## Accepted Variables
-***All*** economy commands that take amount parameters now support these formats:
+All ***economy*** commands that take amount parameters now support these formats:
 
 **Number Formats:**
 - `1000` - Regular numbers
@@ -446,5 +446,164 @@ More actions
 > Get information about the user (Accout creation, roles, ID, etc)
 
 
+
+# bronx manager
+
+The bronx manager is a terminal interface for managing your bot instance. It provides both a full-featured GUI and a fallback text menu.
+
+## Quick Start
+
+**Important:** Always run the manager from the bronxbot directory.
+
+```bash
+cd /path/to/bronx-nextcord
+python3 manager.py
+```
+
+The manager will automatically detect dependencies and either:
+- Launch the terminal GUI (if textual/rich are installed)
+- Offer to install dependencies 
+- Fall back to a simple text menu
+
+## Manager Features
+
+### Terminal GUI
+- **Live status monitoring** - Real-time bot status, server count, latency
+- **Live log streaming** - Automatic log updates every 2 seconds
+- **Service controls** - Start, stop, restart bot with one click
+- **Tray management** - Start/stop system tray (runs in background)
+- **Script output** - See real-time output from all management scripts
+- **Clean interface** - Minimalist design, easy on the eyes
+
+### Navigation
+- `q` - Quit manager
+- `r` - Refresh all data
+- `s` - Toggle status display
+- `l` - Toggle logs display
+
+## Testing & Development
+
+### Test Individual Components
+
+**Test fallback manager:**
+```bash
+cd /path/to/bronx-nextcord
+python3 -c "import sys; sys.path.insert(0, '.'); from manager import run_fallback; run_fallback()"
+```
+
+**Test GUI directly:**
+```bash
+cd /path/to/bronx-nextcord
+python3 -c "import sys; sys.path.insert(0, '.'); from manager import run_gui; run_gui()"
+```
+
+**Test specific manager functions:**
+```bash
+cd /path/to/bronx-nextcord
+python3 -c "import sys; sys.path.insert(0, '.'); from manager import check_dependencies; print(check_dependencies())"
+```
+
+### Manual Script Execution
+
+All management scripts are in the `scripts/` directory:
+
+```bash
+# Start bot
+bash scripts/start_bot.sh
+
+# Stop bot  
+bash scripts/stop_bot.sh
+
+# Check status
+bash scripts/status_bot.sh
+
+# View logs
+bash scripts/logs_bot.sh
+
+# Start system tray
+bash scripts/start_tray.sh
+
+# Setup background service
+bash scripts/setup_background.sh
+```
+
+### Advanced Usage
+
+**Run manager with specific Python:**
+```bash
+/home/user/venv/bin/python manager.py
+```
+
+**Install dependencies manually:**
+```bash
+pip install textual rich
+```
+
+**Check if manager dependencies are available:**
+```bash
+python3 -c "
+try:
+    import textual, rich
+    print('✓ GUI dependencies available')
+except ImportError as e:
+    print(f'✗ Missing: {e}')
+"
+```
+
+### Troubleshooting
+
+**GUI won't start:**
+- Check if textual/rich are installed: `pip list | grep -E "(textual|rich)"`
+- Try fallback mode: `python3 -c "from manager import run_fallback; run_fallback()"`
+
+**Tray freezes manager:**
+- The manager handles this automatically (runs tray in background)
+- Use "stop tray" button to terminate tray application
+- Manual stop: `pkill -f bronxbot_tray.py`
+
+**Scripts not found:**
+- Ensure you're in the bronxbot directory: `ls bronxbot.py`
+- Check scripts directory exists: `ls scripts/`
+- Re-run setup if needed: `bash scripts/setup_background.sh`
+
+**Permission issues:**
+- Make scripts executable: `chmod +x scripts/*.sh`
+- Check directory ownership: `ls -la`
+
+### Manager Development
+
+The manager consists of:
+- `manager.py` - Main launcher with dependency checking
+- `bronx_manager.py` - async terminal GUI using textual
+- `scripts/` - Management scripts (bash)
+
+**Key features:**
+- Async operations (non-blocking)
+- Live updates (status every 3s, logs every 2s)
+- Error handling and recovery
+- Cross-platform compatibility
+- Fallback support
+
+## Quick Commands Reference
+
+```bash
+# Basic usage
+python3 manager.py                    # Start manager (auto-detects best mode)
+
+# Testing specific components  
+python3 -c "from manager import run_fallback; run_fallback()"     # Test fallback menu
+python3 -c "from manager import run_gui; run_gui()"               # Test GUI directly
+python3 -c "from manager import check_dependencies; print(check_dependencies())"  # Check deps
+
+# Direct script execution
+bash scripts/start_bot.sh             # Start bot manually
+bash scripts/stop_bot.sh              # Stop bot manually
+bash scripts/status_bot.sh            # Check bot status
+pkill -f bronxbot_tray.py             # Stop tray application
+
+# Dependency management
+pip install textual rich              # Install GUI dependencies
+pip list | grep -E "(textual|rich)"   # Check if GUI deps installed
+```
 
 # READ CHANGES.TXT

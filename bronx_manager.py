@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-BronxBot Manager
-A beautiful async terminal interface for managing BronxBot services
+bronx manager
+async terminal interface for managing bronx services
 """
 
 import asyncio
@@ -47,7 +47,7 @@ class StatusWidget(Static):
         }
     
     def compose(self) -> ComposeResult:
-        yield Static("BronxBot Status", classes="status-title")
+        yield Static("bronx status", classes="status-title")
         yield Static("", id="status-content")
     
     async def update_status(self):
@@ -145,18 +145,34 @@ Last Activity: {status['last_activity']}
 class LogViewer(Static):
     """Widget for viewing logs"""
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.last_log_size = 0
+        self.last_modified = 0
+    
     def compose(self) -> ComposeResult:
-        yield Static("Recent Logs", classes="log-title")
+        yield Static("logs (live)", classes="log-title")
         yield Log(id="log-content", auto_scroll=True)
     
     async def refresh_logs(self):
-        """Refresh log content"""
+        """Refresh log content only if file has changed"""
         try:
             log_files = list(Path('logs').glob('bronxbot_*.log'))
             if not log_files:
                 return
             
             latest_log = max(log_files, key=os.path.getctime)
+            
+            # Check if file has been modified
+            current_modified = latest_log.stat().st_mtime
+            current_size = latest_log.stat().st_size
+            
+            if (current_modified == self.last_modified and 
+                current_size == self.last_log_size):
+                return  # No changes, skip update
+            
+            self.last_modified = current_modified
+            self.last_log_size = current_size
             
             with open(latest_log, 'r') as f:
                 lines = f.readlines()[-50:]  # Last 50 lines
@@ -181,7 +197,7 @@ class ScriptOutput(Static):
     """Widget for displaying script output"""
     
     def compose(self) -> ComposeResult:
-        yield Static("Script Output", classes="output-title")
+        yield Static("output", classes="output-title")
         yield Log(id="script-output", auto_scroll=True)
     
     def add_output(self, text: str):
@@ -201,19 +217,19 @@ class ServiceControls(Static):
     """Widget for service control buttons"""
     
     def compose(self) -> ComposeResult:
-        yield Static("Service Controls", classes="controls-title")
+        yield Static("controls", classes="controls-title")
         with Horizontal(classes="control-buttons"):
-            yield Button("Start", id="start-btn", variant="success")
-            yield Button("Stop", id="stop-btn", variant="error") 
-            yield Button("Restart", id="restart-btn", variant="warning")
-            yield Button("Status", id="status-btn")
+            yield Button("start", id="start-btn", variant="success")
+            yield Button("stop", id="stop-btn", variant="error") 
+            yield Button("restart", id="restart-btn", variant="warning")
+            yield Button("status", id="status-btn")
         with Horizontal(classes="control-buttons"):
-            yield Button("Tray", id="tray-btn", variant="primary")
-            yield Button("Stop Tray", id="stop-tray-btn", variant="error")
-            yield Button("Logs", id="logs-btn")
-            yield Button("Setup", id="setup-btn")
+            yield Button("tray", id="tray-btn", variant="primary")
+            yield Button("stop tray", id="stop-tray-btn", variant="error")
+            yield Button("logs", id="logs-btn")
+            yield Button("setup", id="setup-btn")
         with Horizontal(classes="control-buttons"):
-            yield Button("Uninstall", id="uninstall-btn", variant="error")
+            yield Button("uninstall", id="uninstall-btn", variant="error")
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses"""
@@ -221,23 +237,23 @@ class ServiceControls(Static):
         app = self.app
         
         if button_id == "start-btn":
-            app.run_script("start_bot.sh", "Starting BronxBot service...")
+            app.run_script("start_bot.sh", "starting bronx service...")
         elif button_id == "stop-btn":
-            app.run_script("stop_bot.sh", "Stopping BronxBot service...")
+            app.run_script("stop_bot.sh", "stopping bronx service...")
         elif button_id == "restart-btn":
-            app.run_script("start_bot.sh", "Restarting BronxBot service...")
+            app.run_script("start_bot.sh", "restarting bronx service...")
         elif button_id == "tray-btn":
-            app.run_script("start_tray.sh", "Starting system tray...")
+            app.run_script("start_tray.sh", "starting system tray...")
         elif button_id == "stop-tray-btn":
             app.stop_tray_application()
         elif button_id == "status-btn":
-            app.run_script("status_bot.sh", "Checking bot status...")
+            app.run_script("status_bot.sh", "checking bot status...")
         elif button_id == "logs-btn":
-            app.run_script("logs_bot.sh", "Opening logs...")
+            app.run_script("logs_bot.sh", "opening logs...")
         elif button_id == "setup-btn":
-            app.run_script("setup_background.sh", "Running setup...")
+            app.run_script("setup_background.sh", "running setup...")
         elif button_id == "uninstall-btn":
-            app.show_confirmation("Are you sure you want to uninstall?", "uninstall_background.sh")
+            app.show_confirmation("are you sure you want to uninstall?", "uninstall_background.sh")
 
 
 class ConfirmationScreen(ModalScreen):
@@ -345,6 +361,7 @@ class BronxManager(App):
         super().__init__(**kwargs)
         self.scripts_dir = Path("scripts")
         self.status_timer: Optional[Timer] = None
+        self.log_timer: Optional[Timer] = None
         
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
@@ -357,15 +374,18 @@ class BronxManager(App):
                     yield LogViewer(id="log-viewer")
                     yield ScriptOutput(id="script-output")
         yield Footer()
-        yield Static("Ready", id="footer-status")
+        yield Static("ready", id="footer-status")
     
     def on_mount(self) -> None:
         """Called when app starts."""
-        self.title = "BronxBot Manager"
-        self.sub_title = "Terminal Interface"
+        self.title = "bronx manager"
+        self.sub_title = "terminal interface"
         
         # Start periodic status updates
         self.status_timer = self.set_interval(3.0, self.update_status)
+        
+        # Start periodic log updates (every 2 seconds)
+        self.log_timer = self.set_interval(2.0, self.refresh_logs)
         
         # Initial status update
         self.call_later(self.update_status)
@@ -381,14 +401,23 @@ class BronxManager(App):
     async def refresh_logs(self):
         """Refresh log display"""
         log_viewer = self.query_one("#log-viewer", LogViewer)
+        old_size = log_viewer.last_log_size
         await log_viewer.refresh_logs()
+        
+        # Only show update message if logs actually changed
+        if log_viewer.last_log_size != old_size:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            footer_status = self.query_one("#footer-status", Static)
+            footer_status.update(f"[{timestamp}] logs updated")
+            # Clear this status after 2 seconds
+            self.set_timer(2.0, lambda: footer_status.update(f"[{timestamp}] ready | logs live"))
     
     def action_refresh(self) -> None:
         """Refresh all data"""
-        self.update_footer_status("Refreshing...")
+        self.update_footer_status("refreshing...")
         self.call_later(self.update_status)
         self.call_later(self.refresh_logs)
-        self.call_later(lambda: self.update_footer_status("Refreshed!"))
+        self.call_later(lambda: self.update_footer_status("refreshed!"))
     
     def action_toggle_status(self) -> None:
         """Toggle status display"""
@@ -573,24 +602,26 @@ class BronxManager(App):
         footer_status.update(f"[{timestamp}] {message}")
         
         # Auto-clear status after 5 seconds
-        self.set_timer(5.0, lambda: footer_status.update("Ready"))
+        self.set_timer(5.0, lambda: footer_status.update("ready"))
     
     def on_unmount(self) -> None:
         """Cleanup when app closes"""
         if self.status_timer:
             self.status_timer.stop()
+        if self.log_timer:
+            self.log_timer.stop()
 
 
 def main():
-    """Main entry point"""
+    """main entry point"""
     # Check if we're in the right directory
     if not Path("bronxbot.py").exists():
-        print("ERROR: Please run this from the BronxBot directory")
+        print("error: please run this from the bronxbot directory")
         return 1
     
     # Check if scripts directory exists
     if not Path("scripts").exists():
-        print("ERROR: Scripts directory not found. Please run setup first.")
+        print("error: scripts directory not found. please run setup first.")
         return 1
     
     # Run the app
