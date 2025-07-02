@@ -4,6 +4,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVICE_NAME="bronxbot"
 TRAY_DESKTOP_FILE="$HOME/.config/autostart/bronxbot-tray.desktop"
 
@@ -44,7 +45,7 @@ $VENV_PATH/bin/pip install PyQt5 > /dev/null 2>&1 || {
 }
 
 # Make scripts executable
-chmod +x "$SCRIPT_DIR/bronxbot_tray.py"
+chmod +x "$PROJECT_DIR/bronxbot_tray.py"
 echo "SUCCESS: Made tray script executable"
 
 # Install systemd service for user
@@ -52,10 +53,10 @@ echo "Setting up systemd service..."
 
 # Copy service file to user systemd directory
 mkdir -p "$HOME/.config/systemd/user"
-cp "$SCRIPT_DIR/bronxbot.service" "$HOME/.config/systemd/user/"
+cp "$PROJECT_DIR/bronxbot.service" "$HOME/.config/systemd/user/"
 
 # Update service file with correct paths
-sed -i "s|/home/ks/bronx-nextcord|$SCRIPT_DIR|g" "$HOME/.config/systemd/user/bronxbot.service"
+sed -i "s|/home/ks/bronx-nextcord|$PROJECT_DIR|g" "$HOME/.config/systemd/user/bronxbot.service"
 sed -i "s|/home/ks/bronx-venv|$VENV_PATH|g" "$HOME/.config/systemd/user/bronxbot.service"
 
 # Reload systemd and enable service
@@ -73,7 +74,7 @@ cat > "$TRAY_DESKTOP_FILE" << EOF
 Type=Application
 Name=BronxBot Tray
 Comment=BronxBot Discord Bot System Tray Manager
-Exec=$VENV_PATH/bin/python $SCRIPT_DIR/bronxbot_tray.py
+Exec=$VENV_PATH/bin/python $PROJECT_DIR/bronxbot_tray.py
 Icon=applications-internet
 Hidden=false
 NoDisplay=false
@@ -123,8 +124,8 @@ EOF
 # Tray script
 cat > "$SCRIPT_DIR/start_tray.sh" << EOF
 #!/bin/bash
-cd "$SCRIPT_DIR"
-$VENV_PATH/bin/python $SCRIPT_DIR/bronxbot_tray.py &
+cd "$PROJECT_DIR"
+$VENV_PATH/bin/python $PROJECT_DIR/bronxbot_tray.py &
 echo "TRAY: System tray started"
 EOF
 

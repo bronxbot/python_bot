@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "BronxBot Status:"
+echo "STATUS: BronxBot Status:"
 systemctl --user status bronxbot --no-pager -l

@@ -218,18 +218,22 @@ class ServiceControls(Static):
     
     def compose(self) -> ComposeResult:
         yield Static("controls", classes="controls-title")
-        with Horizontal(classes="control-buttons"):
-            yield Button("start", id="start-btn", variant="success")
-            yield Button("stop", id="stop-btn", variant="error") 
-            yield Button("restart", id="restart-btn", variant="warning")
-            yield Button("status", id="status-btn")
-        with Horizontal(classes="control-buttons"):
-            yield Button("tray", id="tray-btn", variant="primary")
-            yield Button("stop tray", id="stop-tray-btn", variant="error")
-            yield Button("logs", id="logs-btn")
-            yield Button("setup", id="setup-btn")
-        with Horizontal(classes="control-buttons"):
-            yield Button("uninstall", id="uninstall-btn", variant="error")
+        with Horizontal(classes="controls-container"):
+            with Vertical(classes="buttons-column"):
+                with Horizontal(classes="control-buttons"):
+                    yield Button("start", id="start-btn", variant="success")
+                    yield Button("stop", id="stop-btn", variant="error") 
+                    yield Button("restart", id="restart-btn", variant="warning")
+                with Horizontal(classes="control-buttons"):
+                    yield Button("status", id="status-btn")
+                    yield Button("logs", id="logs-btn")
+                    yield Button("setup", id="setup-btn")
+                with Horizontal(classes="control-buttons"):
+                    yield Button("tray", id="tray-btn", variant="primary")
+                    yield Button("stop tray", id="stop-tray-btn", variant="error")
+                    yield Button("uninstall", id="uninstall-btn", variant="error")
+            with Container(classes="overview-column"):
+                yield Static("hover over buttons for details", id="overview-text", classes="overview-text")
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses"""
@@ -254,6 +258,40 @@ class ServiceControls(Static):
             app.run_script("setup_background.sh", "running setup...")
         elif button_id == "uninstall-btn":
             app.show_confirmation("are you sure you want to uninstall?", "uninstall_background.sh")
+    
+    def on_enter(self, event: events.Enter) -> None:
+        """Handle mouse enter events on buttons"""
+        if (hasattr(event, 'control') and 
+            event.control is not None and 
+            hasattr(event.control, 'id') and 
+            event.control.id is not None):
+            button_id = event.control.id
+            overview_text = self.query_one("#overview-text", Static)
+            
+            descriptions = {
+                "start-btn": "Start the BronxBot Discord service",
+                "stop-btn": "Stop the BronxBot Discord service",
+                "restart-btn": "Restart the BronxBot Discord service",
+                "status-btn": "Check the current status of the bot",
+                "logs-btn": "View recent bot logs in terminal",
+                "setup-btn": "Run initial setup and configuration",
+                "tray-btn": "Start the system tray monitor",
+                "stop-tray-btn": "Stop the system tray monitor",
+                "uninstall-btn": "Remove BronxBot from the system"
+            }
+            
+            if button_id in descriptions:
+                overview_text.update(descriptions[button_id])
+    
+    def on_leave(self, event: events.Leave) -> None:
+        """Handle mouse leave events"""
+        if (hasattr(event, 'control') and 
+            event.control is not None and 
+            hasattr(event.control, 'id') and 
+            event.control.id is not None and 
+            event.control.id.endswith('-btn')):
+            overview_text = self.query_one("#overview-text", Static)
+            overview_text.update("hover over buttons for details")
 
 
 class ConfirmationScreen(ModalScreen):
@@ -273,8 +311,217 @@ class ConfirmationScreen(ModalScreen):
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "confirm-yes":
-            self.app.run_script(self.script, f"Running {self.script}...")
+            if self.script.startswith("kill_process_"):
+                # Extract PID and kill specific process
+                pid = int(self.script.replace("kill_process_", ""))
+                process_manager = self.app.query_one("#process-manager", ProcessManager)
+                self.app.call_later(process_manager.kill_process, pid)
+            elif self.script == "kill_all_bronx_processes":
+                # Kill all processes
+                process_manager = self.app.query_one("#process-manager", ProcessManager)
+                self.app.call_later(process_manager.kill_all_processes)
+            else:
+                # Regular script execution
+                self.app.run_script(self.script, f"Running {self.script}...")
         self.dismiss()
+
+
+class ProcessManager(Static):
+    """Widget for managing BronxBot processes"""
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.processes = []
+    
+    def compose(self) -> ComposeResult:
+        yield Static("process manager", classes="process-title")
+        yield DataTable(id="process-table", show_header=True, zebra_stripes=True)
+        with Horizontal(classes="process-buttons"):
+            yield Button("refresh", id="refresh-processes-btn", variant="primary")
+            yield Button("kill selected", id="kill-process-btn", variant="error")
+            yield Button("kill all", id="kill-all-btn", variant="error")
+    
+    async def refresh_processes(self):
+        """Refresh the process list"""
+        try:
+            # Get BronxBot related processes
+            process_data = await self._get_bronx_processes()
+            
+            # Update the data table
+            table = self.query_one("#process-table", DataTable)
+            table.clear(columns=True)
+            
+            # Add columns
+            table.add_columns("PID", "Command", "CPU%", "Memory", "Status", "Runtime")
+            
+            # Add process data
+            for proc in process_data:
+                table.add_row(
+                    str(proc['pid']),
+                    proc['command'][:50] + "..." if len(proc['command']) > 50 else proc['command'],
+                    f"{proc['cpu']:.1f}%",
+                    proc['memory'],
+                    proc['status'],
+                    proc['runtime']
+                )
+            
+            self.processes = process_data
+            
+        except Exception as e:
+            # Show error in table
+            table = self.query_one("#process-table", DataTable)
+            table.clear(columns=True)
+            table.add_columns("Error", "", "", "", "", "")
+            table.add_row(f"Failed to get processes: {e}", "", "", "", "", "")
+    
+    async def _get_bronx_processes(self):
+        """Get BronxBot related processes"""
+        processes = []
+        
+        try:
+            # Use ps to get detailed process information
+            result = await asyncio.create_subprocess_exec(
+                'ps', 'aux',
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await result.communicate()
+            
+            if result.returncode == 0:
+                lines = stdout.decode().split('\n')[1:]  # Skip header
+                
+                for line in lines:
+                    if not line.strip():
+                        continue
+                    
+                    # Check if line contains bronx-related processes
+                    if any(keyword in line.lower() for keyword in ['bronx', 'tray']):
+                        parts = line.split(None, 10)
+                        if len(parts) >= 11:
+                            try:
+                                processes.append({
+                                    'user': parts[0],
+                                    'pid': int(parts[1]),
+                                    'cpu': float(parts[2]),
+                                    'memory': parts[3] + "MB",
+                                    'status': parts[7],
+                                    'runtime': parts[9],
+                                    'command': parts[10]
+                                })
+                            except (ValueError, IndexError):
+                                continue
+            
+            # Also check systemd service
+            try:
+                systemd_result = await asyncio.create_subprocess_exec(
+                    'systemctl', '--user', 'show', 'bronxbot', '--property=MainPID,ActiveState,SubState',
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                systemd_stdout, _ = await systemd_result.communicate()
+                
+                if systemd_result.returncode == 0:
+                    systemd_info = {}
+                    for line in systemd_stdout.decode().split('\n'):
+                        if '=' in line:
+                            key, value = line.split('=', 1)
+                            systemd_info[key] = value
+                    
+                    if systemd_info.get('MainPID', '0') != '0':
+                        # Add systemd service info
+                        processes.append({
+                            'user': 'systemd',
+                            'pid': int(systemd_info.get('MainPID', 0)),
+                            'cpu': 0.0,
+                            'memory': "N/A",
+                            'status': f"{systemd_info.get('ActiveState', 'unknown')}/{systemd_info.get('SubState', 'unknown')}",
+                            'runtime': "N/A",
+                            'command': "bronxbot.service (systemd)"
+                        })
+            except:
+                pass
+                
+        except Exception as e:
+            print(f"Error getting processes: {e}")
+        
+        return processes
+    
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle process manager button presses"""
+        button_id = event.button.id
+        app = self.app
+        
+        if button_id == "refresh-processes-btn":
+            app.call_later(self.refresh_processes)
+            app.update_footer_status("Refreshing processes...")
+        elif button_id == "kill-process-btn":
+            table = self.query_one("#process-table", DataTable)
+            if table.cursor_row is not None and table.cursor_row < len(self.processes):
+                selected_process = self.processes[table.cursor_row]
+                app.show_confirmation(
+                    f"kill process {selected_process['pid']} ({selected_process['command'][:30]}...)?",
+                    f"kill_process_{selected_process['pid']}"
+                )
+        elif button_id == "kill-all-btn":
+            if self.processes:
+                app.show_confirmation(
+                    f"kill all {len(self.processes)} BronxBot processes?",
+                    "kill_all_bronx_processes"
+                )
+    
+    async def kill_process(self, pid: int):
+        """Kill a specific process"""
+        try:
+            result = await asyncio.create_subprocess_exec(
+                'kill', '-TERM', str(pid),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            await result.wait()
+            
+            if result.returncode == 0:
+                self.app.update_footer_status(f"Process {pid} terminated")
+            else:
+                # Try force kill
+                force_result = await asyncio.create_subprocess_exec(
+                    'kill', '-KILL', str(pid),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                await force_result.wait()
+                self.app.update_footer_status(f"Process {pid} force killed")
+            
+            # Refresh process list
+            await asyncio.sleep(1)
+            await self.refresh_processes()
+            
+        except Exception as e:
+            self.app.update_footer_status(f"Failed to kill process {pid}: {e}")
+    
+    async def kill_all_processes(self):
+        """Kill all BronxBot processes"""
+        killed_count = 0
+        
+        for proc in self.processes:
+            try:
+                if proc['user'] != 'systemd':  # Don't kill systemd service directly
+                    await self.kill_process(proc['pid'])
+                    killed_count += 1
+                else:
+                    # Stop systemd service properly
+                    result = await asyncio.create_subprocess_exec(
+                        'systemctl', '--user', 'stop', 'bronxbot',
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    await result.wait()
+                    killed_count += 1
+            except:
+                continue
+        
+        self.app.update_footer_status(f"Stopped {killed_count} processes")
+        await asyncio.sleep(2)
+        await self.refresh_processes()
 
 
 class BronxManager(App):
@@ -285,7 +532,7 @@ class BronxManager(App):
         background: $background;
     }
     
-    .status-title, .log-title, .controls-title, .output-title {
+    .status-title, .log-title, .controls-title, .output-title, .process-title {
         color: $accent;
         text-style: bold;
         margin: 1;
@@ -298,14 +545,59 @@ class BronxManager(App):
         height: 8;
     }
     
-    #log-content, #script-output {
+    #process-table {
         border: solid $primary;
-        height: 20;
+        height: 12;
         margin: 1 0;
     }
     
-    #log-viewer, #script-output {
-        width: 50%;
+    .process-buttons {
+        margin: 1 0;
+        height: 3;
+    }
+    
+    .process-buttons > Button {
+        margin: 0 1;
+        min-width: 12;
+    }
+    
+    #log-content, #script-output {
+        border: solid $primary;
+        height: 35;
+        margin: 1 0;
+        overflow: auto auto;
+    }
+    
+    #log-viewer {
+        width: 35%;
+    }
+    
+    #script-output {
+        width: 65%;
+    }
+    
+    .controls-container {
+        height: 12;
+        margin: 1 0;
+    }
+    
+    .buttons-column {
+        width: 60%;
+        margin-right: 2;
+    }
+    
+    .overview-column {
+        width: 40%;
+        border: solid $secondary;
+        padding: 1;
+        height: 10;
+    }
+    
+    .overview-text {
+        text-align: center;
+        content-align: center middle;
+        color: $text-muted;
+        text-style: italic;
     }
     
     .control-buttons {
@@ -362,6 +654,7 @@ class BronxManager(App):
         self.scripts_dir = Path("scripts")
         self.status_timer: Optional[Timer] = None
         self.log_timer: Optional[Timer] = None
+        self.process_timer: Optional[Timer] = None
         
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
@@ -373,6 +666,7 @@ class BronxManager(App):
                 with Horizontal():
                     yield LogViewer(id="log-viewer")
                     yield ScriptOutput(id="script-output")
+                yield ProcessManager(id="process-manager")
         yield Footer()
         yield Static("ready", id="footer-status")
     
@@ -387,11 +681,17 @@ class BronxManager(App):
         # Start periodic log updates (every 2 seconds)
         self.log_timer = self.set_interval(2.0, self.refresh_logs)
         
+        # Start periodic process updates (every 5 seconds)
+        self.process_timer = self.set_interval(5.0, self.refresh_processes)
+        
         # Initial status update
         self.call_later(self.update_status)
         
         # Initial log refresh
         self.call_later(self.refresh_logs)
+        
+        # Initial process refresh
+        self.call_later(self.refresh_processes)
     
     async def update_status(self):
         """Update bot status"""
@@ -610,6 +910,13 @@ class BronxManager(App):
             self.status_timer.stop()
         if self.log_timer:
             self.log_timer.stop()
+        if self.process_timer:
+            self.process_timer.stop()
+    
+    async def refresh_processes(self):
+        """Refresh process display"""
+        process_manager = self.query_one("#process-manager", ProcessManager)
+        await process_manager.refresh_processes()
 
 
 def main():

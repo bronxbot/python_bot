@@ -1,3 +1,3 @@
 #!/bin/bash
 systemctl --user stop bronxbot
-echo "BronxBot stopped"
+echo "STOPPED: BronxBot stopped"
