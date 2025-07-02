@@ -39,3 +39,7 @@ setuptools==80.9.0
 
 # System Tray (optional - for background management)
 PyQt5==5.15.10
+
+# Modern Terminal UI
+textual==0.41.0
+rich==13.7.0
