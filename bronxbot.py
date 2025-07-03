@@ -60,7 +60,13 @@ class Colors:
 
 def clear_screen():
     """Clear the console screen"""
-    os.system('clear' if os.name == 'posix' else 'cls')
+    try:
+        # Only clear if we have a TTY (interactive terminal)
+        if sys.stdout.isatty():
+            os.system('clear' if os.name == 'posix' else 'cls')
+    except:
+        # Silently fail if no terminal is available (e.g., systemd service)
+        pass
 
 def get_terminal_width():
     """Get terminal width for centering"""
@@ -565,6 +571,17 @@ class BronxBot(commands.AutoShardedBot):
         
         # Check if terminal supports cursor movement
         try:
+            # Only attempt terminal operations if we have a TTY
+            if not sys.stdout.isatty():
+                # No terminal available, just print normally
+                print(Colors.BRIGHT_CYAN + '─' * get_terminal_width() + Colors.RESET)
+                stats_text = f"Events: {self.events_tracked} | Guilds: {len(self.guilds)} | Users: {len(self.users)} | Latency: {round(self.latency * 1000)}ms"
+                print(Colors.CYAN + center_text(stats_text) + Colors.RESET)
+                print(Colors.BRIGHT_CYAN + '─' * get_terminal_width() + Colors.RESET)
+                self._events_since_stats = 0
+                self._stats_printed = True
+                return
+                
             # Get current terminal height
             import os
             rows, cols = os.popen('stty size', 'r').read().split()
