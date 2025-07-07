@@ -38,23 +38,8 @@ class CogLogger:
                 pass  # File logging is optional
     
     # Delegate logging methods to make usage cleaner
-    def info(self, msg, *args, **kwargs):
-        self._logger.info(msg, *args, **kwargs)
-    
-    def error(self, msg, *args, **kwargs):
-        self._logger.error(msg, *args, **kwargs)
-        
-    def debug(self, msg, *args, **kwargs):
-        self._logger.debug(msg, *args, **kwargs)
-        
-    def warning(self, msg, *args, **kwargs):
-        self._logger.warning(msg, *args, **kwargs)
-    
-    def critical(self, msg, *args, **kwargs):
-        self._logger.critical(msg, *args, **kwargs)
-        
-    def critical(self, msg, *args, **kwargs):
-        self._logger.critical(msg, *args, **kwargs)
+
+
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter that adds colors to log levels"""
