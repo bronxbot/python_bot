@@ -1,0 +1,158 @@
+{
+  "rods": {
+    "basic_rod": {
+      "name": "Basic Rod",
+      "description": "A simple fishing rod for beginners.",
+      "icon": "🎣",
+      "price": 100,
+      "durability": 100,
+      "catch_bonus": 0,
+      "luck_bonus": 0,
+      "value_bonus": 0,
+      "effects": []
+    },
+    "wooden_rod": {
+      "name": "Wooden Rod",
+      "description": "A traditional wooden fishing rod.",
+      "icon": "🪵",
+      "price": 500,
+      "durability": 150,
+      "catch_bonus": 5,
+      "luck_bonus": 2,
+      "value_bonus": 0,
+      "effects": []
+    },
+    "bamboo_rod": {
+      "name": "Bamboo Rod",
+      "description": "A lightweight bamboo fishing rod.",
+      "icon": "🎋",
+      "price": 1000,
+      "durability": 200,
+      "catch_bonus": 10,
+      "luck_bonus": 5,
+      "value_bonus": 0,
+      "effects": []
+    },
+    "steel_rod": {
+      "name": "Steel Rod",
+      "description": "A durable steel fishing rod.",
+      "icon": "🔧",
+      "price": 2500,
+      "durability": 300,
+      "catch_bonus": 15,
+      "luck_bonus": 8,
+      "value_bonus": 10,
+      "effects": []
+    },
+    "carbon_fiber_rod": {
+      "name": "Carbon Fiber Rod",
+      "description": "A high-tech carbon fiber fishing rod.",
+      "icon": "⚡",
+      "price": 5000,
+      "durability": 400,
+      "catch_bonus": 25,
+      "luck_bonus": 15,
+      "value_bonus": 20,
+      "effects": []
+    },
+    "diamond_rod": {
+      "name": "Diamond Rod",
+      "description": "A luxurious diamond-encrusted fishing rod.",
+      "icon": "💎",
+      "price": 15000,
+      "durability": 500,
+      "catch_bonus": 40,
+      "luck_bonus": 25,
+      "value_bonus": 50,
+      "effects": []
+    },
+    "cosmic_rod": {
+      "name": "Cosmic Rod",
+      "description": "A mystical rod forged from cosmic materials.",
+      "icon": "🌌",
+      "price": 50000,
+      "durability": 750,
+      "catch_bonus": 60,
+      "luck_bonus": 40,
+      "value_bonus": 100,
+      "effects": []
+    },
+    "legendary_rod": {
+      "name": "Legendary Rod",
+      "description": "The ultimate fishing rod of legend.",
+      "icon": "🏆",
+      "price": 100000,
+      "durability": 1000,
+      "catch_bonus": 100,
+      "luck_bonus": 75,
+      "value_bonus": 200,
+      "effects": []
+    }
+  },
+  "rod_effects": {
+    "double_money": {
+      "name": "Double Money",
+      "description": "Doubles the value of caught fish",
+      "icon": "💰",
+      "rarity": "rare",
+      "effect_type": "value_multiplier",
+      "value": 2.0
+    },
+    "triple_luck": {
+      "name": "Triple Luck",
+      "description": "Triples your luck when fishing",
+      "icon": "🍀",
+      "rarity": "epic",
+      "effect_type": "luck_multiplier",
+      "value": 3.0
+    },
+    "guaranteed_mythical": {
+      "name": "Guaranteed Mythical",
+      "description": "Guarantees next catch is mythical or higher",
+      "icon": "⭐",
+      "rarity": "legendary",
+      "effect_type": "guaranteed_rarity",
+      "value": "mythical"
+    },
+    "never_break": {
+      "name": "Never Break",
+      "description": "Rod never loses durability",
+      "icon": "🛡️",
+      "rarity": "legendary",
+      "effect_type": "durability_protection",
+      "value": true
+    },
+    "speed_fishing": {
+      "name": "Speed Fishing",
+      "description": "Reduces fishing time by 50%",
+      "icon": "⚡",
+      "rarity": "epic",
+      "effect_type": "time_reduction",
+      "value": 0.5
+    },
+    "rare_magnet": {
+      "name": "Rare Magnet",
+      "description": "Attracts rare fish more often",
+      "icon": "🧲",
+      "rarity": "rare",
+      "effect_type": "rarity_boost",
+      "value": 1.5
+    },
+    "auto_sell": {
+      "name": "Auto Sell",
+      "description": "Automatically sells common fish",
+      "icon": "🏪",
+      "rarity": "uncommon",
+      "effect_type": "auto_sell",
+      "value": "common"
+    },
+    "experience_boost": {
+      "name": "Experience Boost",
+      "description": "Gains 50% more fishing experience",
+      "icon": "📈",
+      "rarity": "rare",
+      "effect_type": "exp_multiplier",
+      "value": 1.5
+    }
+  }
+}

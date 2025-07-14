@@ -1,0 +1,33 @@
+[Unit]
+Description=BronxBot Discord Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=bronxbot
+Group=bronxbot
+WorkingDirectory=/home/bronxbot/bronx-rewritten
+Environment=PATH=/home/bronxbot/bronx-rewritten/venv/bin
+ExecStart=/home/bronxbot/bronx-rewritten/venv/bin/python main.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=always
+RestartSec=10
+TimeoutStartSec=30
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bronxbot
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/home/bronxbot/bronx-rewritten/logs
+ReadWritePaths=/home/bronxbot/bronx-rewritten/data
+
+[Install]
+WantedBy=multi-user.target

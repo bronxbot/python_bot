@@ -1,0 +1,169 @@
+{
+  "bait": {
+    "basic_bait": {
+      "name": "Basic Bait",
+      "description": "Simple worms for basic fishing.",
+      "icon": "🪱",
+      "price": 10,
+      "effectiveness": 1.0,
+      "luck_bonus": 0,
+      "rarity_bonus": 0,
+      "special_effects": []
+    },
+    "premium_bait": {
+      "name": "Premium Bait",
+      "description": "High-quality bait that attracts better fish.",
+      "icon": "🐛",
+      "price": 50,
+      "effectiveness": 1.5,
+      "luck_bonus": 5,
+      "rarity_bonus": 0.1,
+      "special_effects": []
+    },
+    "shrimp_bait": {
+      "name": "Shrimp Bait",
+      "description": "Fresh shrimp bait for saltwater fishing.",
+      "icon": "🦐",
+      "price": 100,
+      "effectiveness": 2.0,
+      "luck_bonus": 10,
+      "rarity_bonus": 0.2,
+      "special_effects": ["saltwater_bonus"]
+    },
+    "magic_bait": {
+      "name": "Magic Bait",
+      "description": "Enchanted bait that glows with magical energy.",
+      "icon": "✨",
+      "price": 500,
+      "effectiveness": 3.0,
+      "luck_bonus": 20,
+      "rarity_bonus": 0.3,
+      "special_effects": ["magic_attraction"]
+    },
+    "golden_bait": {
+      "name": "Golden Bait",
+      "description": "Luxurious golden bait that attracts rare fish.",
+      "icon": "🟡",
+      "price": 1000,
+      "effectiveness": 4.0,
+      "luck_bonus": 30,
+      "rarity_bonus": 0.5,
+      "special_effects": ["rare_attraction"]
+    },
+    "diamond_bait": {
+      "name": "Diamond Bait",
+      "description": "Sparkling diamond bait for legendary catches.",
+      "icon": "💎",
+      "price": 5000,
+      "effectiveness": 6.0,
+      "luck_bonus": 50,
+      "rarity_bonus": 0.8,
+      "special_effects": ["legendary_attraction"]
+    },
+    "cosmic_bait": {
+      "name": "Cosmic Bait",
+      "description": "Otherworldly bait made from star fragments.",
+      "icon": "🌟",
+      "price": 25000,
+      "effectiveness": 10.0,
+      "luck_bonus": 100,
+      "rarity_bonus": 1.5,
+      "special_effects": ["cosmic_attraction"]
+    },
+    "christmas_bait": {
+      "name": "Christmas Bait",
+      "description": "Festive bait that only works during Christmas.",
+      "icon": "🎄",
+      "price": 2000,
+      "effectiveness": 5.0,
+      "luck_bonus": 40,
+      "rarity_bonus": 1.0,
+      "special_effects": ["christmas_only"],
+      "event_type": "christmas",
+      "seasonal": true
+    },
+    "halloween_bait": {
+      "name": "Halloween Bait",
+      "description": "Spooky bait that only works during Halloween.",
+      "icon": "🎃",
+      "price": 2000,
+      "effectiveness": 5.0,
+      "luck_bonus": 40,
+      "rarity_bonus": 1.0,
+      "special_effects": ["halloween_only"],
+      "event_type": "halloween",
+      "seasonal": true
+    },
+    "new_year_bait": {
+      "name": "New Year Bait",
+      "description": "Celebratory bait that only works during New Year.",
+      "icon": "🎆",
+      "price": 2000,
+      "effectiveness": 5.0,
+      "luck_bonus": 40,
+      "rarity_bonus": 1.0,
+      "special_effects": ["new_year_only"],
+      "event_type": "new_year",
+      "seasonal": true
+    },
+    "anniversary_bait": {
+      "name": "Anniversary Bait",
+      "description": "Special bait that only works during bot anniversary.",
+      "icon": "🎂",
+      "price": 5000,
+      "effectiveness": 8.0,
+      "luck_bonus": 75,
+      "rarity_bonus": 2.0,
+      "special_effects": ["anniversary_only"],
+      "event_type": "anniversary",
+      "seasonal": true
+    }
+  },
+  "bait_effects": {
+    "saltwater_bonus": {
+      "name": "Saltwater Bonus",
+      "description": "Increases effectiveness in saltwater",
+      "multiplier": 1.3
+    },
+    "magic_attraction": {
+      "name": "Magic Attraction",
+      "description": "Attracts magical fish",
+      "rarity_boost": 0.2
+    },
+    "rare_attraction": {
+      "name": "Rare Attraction",
+      "description": "Attracts rare and above fish",
+      "min_rarity": "rare"
+    },
+    "legendary_attraction": {
+      "name": "Legendary Attraction",
+      "description": "Attracts legendary and above fish",
+      "min_rarity": "legendary"
+    },
+    "cosmic_attraction": {
+      "name": "Cosmic Attraction",
+      "description": "Attracts cosmic level fish",
+      "min_rarity": "galactic"
+    },
+    "christmas_only": {
+      "name": "Christmas Only",
+      "description": "Only works during Christmas season",
+      "seasonal": "christmas"
+    },
+    "halloween_only": {
+      "name": "Halloween Only",
+      "description": "Only works during Halloween season",
+      "seasonal": "halloween"
+    },
+    "new_year_only": {
+      "name": "New Year Only",
+      "description": "Only works during New Year season",
+      "seasonal": "new_year"
+    },
+    "anniversary_only": {
+      "name": "Anniversary Only",
+      "description": "Only works during bot anniversary",
+      "seasonal": "anniversary"
+    }
+  }
+}

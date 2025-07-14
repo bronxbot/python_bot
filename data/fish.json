@@ -1,0 +1,261 @@
+{
+  "fish": {
+    "common": {
+      "bass": {
+        "name": "Bass",
+        "description": "A common freshwater fish found in most lakes and rivers.",
+        "icon": "🐟",
+        "base_value": 25,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Lazy and slow-moving, prefers shallow waters."
+      },
+      "trout": {
+        "name": "Trout",
+        "description": "A common freshwater fish known for its fighting spirit.",
+        "icon": "🐟",
+        "base_value": 30,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Energetic and quick, loves cold mountain streams."
+      },
+      "perch": {
+        "name": "Perch",
+        "description": "A common freshwater fish with distinctive stripes.",
+        "icon": "🐟",
+        "base_value": 20,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Curious and social, often found in schools."
+      }
+    },
+    "uncommon": {
+      "pike": {
+        "name": "Pike",
+        "description": "An uncommon predatory fish with sharp teeth.",
+        "icon": "🐠",
+        "base_value": 75,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Aggressive hunter, lurks in weedy areas waiting for prey."
+      },
+      "salmon": {
+        "name": "Salmon",
+        "description": "An uncommon fish known for its upstream migrations.",
+        "icon": "🐠",
+        "base_value": 80,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Determined and strong, never gives up on its journey."
+      }
+    },
+    "rare": {
+      "sturgeon": {
+        "name": "Sturgeon",
+        "description": "A rare ancient fish, prized for its caviar.",
+        "icon": "🐡",
+        "base_value": 200,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Ancient and wise, has seen centuries pass by."
+      },
+      "marlin": {
+        "name": "Marlin",
+        "description": "A rare deep-sea fish with a distinctive spear-like bill.",
+        "icon": "🐡",
+        "base_value": 250,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Proud and majestic, considers itself the king of the sea."
+      }
+    },
+    "epic": {
+      "golden_trout": {
+        "name": "Golden Trout",
+        "description": "An epic fish with shimmering golden scales.",
+        "icon": "🟡",
+        "base_value": 500,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Vain and beautiful, loves to show off its golden shimmer."
+      },
+      "giant_squid": {
+        "name": "Giant Squid",
+        "description": "An epic deep-sea creature with massive tentacles.",
+        "icon": "🦑",
+        "base_value": 750,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Mysterious and intelligent, guardian of the deep abyss."
+      }
+    },
+    "legendary": {
+      "dragon_fish": {
+        "name": "Dragon Fish",
+        "description": "A legendary fish with dragon-like scales and fierce eyes.",
+        "icon": "🐲",
+        "base_value": 1500,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Fierce and proud, breathes underwater fire and commands respect."
+      },
+      "phoenix_salmon": {
+        "name": "Phoenix Salmon",
+        "description": "A legendary fish that glows with inner fire.",
+        "icon": "🔥",
+        "base_value": 1800,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Reborn from the ashes of defeat, never truly dies."
+      }
+    },
+    "galactic": {
+      "stardust_fish": {
+        "name": "Stardust Fish",
+        "description": "A galactic fish made of pure stardust and cosmic energy.",
+        "icon": "✨",
+        "base_value": 3000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Dreamy and ethereal, swims through both water and space."
+      },
+      "nebula_whale": {
+        "name": "Nebula Whale",
+        "description": "A galactic whale-like creature containing entire star systems.",
+        "icon": "🌌",
+        "base_value": 4000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Ancient cosmic entity, sings songs that create new stars."
+      }
+    },
+    "intergalactic": {
+      "void_leviathan": {
+        "name": "Void Leviathan",
+        "description": "An intergalactic sea monster from the depths of space.",
+        "icon": "🌑",
+        "base_value": 8000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Destroyer of worlds, feeds on the fear of lesser beings."
+      },
+      "quantum_fish": {
+        "name": "Quantum Fish",
+        "description": "An intergalactic fish that exists in multiple dimensions.",
+        "icon": "🔬",
+        "base_value": 7500,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Exists everywhere and nowhere, defies all logic."
+      }
+    },
+    "godlike": {
+      "kraken": {
+        "name": "Kraken",
+        "description": "A godlike sea monster of immense power and size.",
+        "icon": "🐙",
+        "base_value": 15000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Ruler of all seas, awakens only when the ocean is threatened."
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "description": "A godlike primordial sea beast from ancient times.",
+        "icon": "🐋",
+        "base_value": 18000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Primordial chaos incarnate, remembers the birth of oceans."
+      }
+    },
+    "mythical": {
+      "world_turtle": {
+        "name": "World Turtle",
+        "description": "A mythical turtle carrying entire worlds on its shell.",
+        "icon": "🐢",
+        "base_value": 35000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Patient and wise, carries the weight of civilizations."
+      },
+      "cosmic_serpent": {
+        "name": "Cosmic Serpent",
+        "description": "A mythical serpent that wraps around galaxies.",
+        "icon": "🐍",
+        "base_value": 40000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Eternal guardian of cosmic balance, keeper of universal secrets."
+      }
+    },
+    "impossible": {
+      "reality_fish": {
+        "name": "Reality Fish",
+        "description": "An impossible fish that bends the laws of existence.",
+        "icon": "🌀",
+        "base_value": 100000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Transcends reality itself, exists beyond mortal comprehension."
+      }
+    },
+    "otherworldly": {
+      "the_first_fish": {
+        "name": "The First Fish",
+        "description": "The otherworldly ancestor of all fish, the beginning of aquatic life.",
+        "icon": "🌟",
+        "base_value": 500000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "The original consciousness, from which all water life emerged."
+      }
+    },
+    "event": {
+      "christmas_fish": {
+        "name": "Christmas Fish",
+        "description": "A festive fish that only appears during Christmas season.",
+        "icon": "🎄",
+        "base_value": 2000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Jolly and generous, spreads holiday cheer wherever it swims.",
+        "event_type": "christmas",
+        "required_bait": "christmas_bait"
+      },
+      "halloween_fish": {
+        "name": "Halloween Fish",
+        "description": "A spooky fish that only appears during Halloween season.",
+        "icon": "🎃",
+        "base_value": 2000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Mischievous and spooky, loves to play pranks on other fish.",
+        "event_type": "halloween",
+        "required_bait": "halloween_bait"
+      },
+      "new_year_fish": {
+        "name": "New Year Fish",
+        "description": "A celebratory fish that only appears during New Year season.",
+        "icon": "🎆",
+        "base_value": 2000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Optimistic and hopeful, believes every cast is a new beginning.",
+        "event_type": "new_year",
+        "required_bait": "new_year_bait"
+      },
+      "anniversary_fish": {
+        "name": "Anniversary Fish",
+        "description": "A special fish that only appears during bot anniversary.",
+        "icon": "🎂",
+        "base_value": 5000,
+        "times_caught": 0,
+        "times_caught_globally": 0,
+        "personality": "Nostalgic and grateful, remembers every milestone of the bot.",
+        "event_type": "anniversary",
+        "required_bait": "anniversary_bait"
+      }
+    }
+  }
+}
